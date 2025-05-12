@@ -1,7 +1,7 @@
 {
   "name": "musicxml-player",
-  "version": "0.20.0",
-  "description": "A simple JavaScript component that loads and plays MusicXML files in the browser using Web Audio and Web MIDI.",
+  "version": "0.20.1",
+  "description": "A TypeScript component that loads and plays MusicXML files in the browser using Web Audio and Web MIDI.",
   "types": "./build/types/index.d.ts",
   "exports": {
     "import": "./build/musicxml-player.js",

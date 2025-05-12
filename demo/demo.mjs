@@ -351,11 +351,11 @@ function handleSheetSelect(e) {
   createPlayer();
 }
 
-async function handleFileBuffer(buffer) {
+async function handleFileBuffer(filename, buffer) {
   try {
     const parseResult = await parseMusicXml(buffer);
     g_state.musicXml = parseResult.musicXml;
-    g_state.params.delete('sheet');
+    g_state.params.set('sheet', filename);
     createPlayer();
   }
   catch {
@@ -373,7 +373,7 @@ async function handleFileUpload(e) {
   const reader = new FileReader();
   const file = e.target.files[0];
   reader.onloadend = async (upload) => {
-    await handleFileBuffer(upload.target.result);
+    await handleFileBuffer(file.name, upload.target.result);
   };
   if (file.size < 1*1024*1024) {
     reader.readAsArrayBuffer(file);
