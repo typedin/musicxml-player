@@ -12,9 +12,12 @@ A TypeScript component that loads   and plays MusicXML files in the browser usin
 npm install
 npm run build
 npm test
-npm run demo
+npm run demo:develop
 ```
 Then open http://127.0.0.1:8080/
+
+If you want to use auto-generated accompaniments (aka "MusicXML MMA" in the demo), you need to [install `musicxml-midi` and run the conversion endpoint](https://github.com/infojunkie/musicxml-midi?tab=readme-ov-file#serve-a-conversion-api-endpoint).
+
 # Theory of operation
 This component synchronizes rendering and playback of MusicXML documents. Rendering is done using existing Web-based music engraving libraries such as [OpenSheetMusicDisplay](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay) or [Verovio](https://github.com/rism-digital/verovio). Playback uses standard MIDI files that are expected to correspond to the given MusicXML, and sends the MIDI events to either a Web MIDI output, or to a Web Audio synthesizer, using the module [`midi-player`](https://github.com/infojunkie/midi-player).
 
