@@ -1,5 +1,6 @@
 import { BasicMIDI } from 'spessasynth_core';
 import { WorkletSynthesizer as Synthetizer, Sequencer } from 'spessasynth_lib';
+import { midiMessageTypes } from 'spessasynth_core';
 import {
   binarySearch,
   parseMusicXml,
@@ -398,15 +399,13 @@ export class Player {
    */
   protected static _adjustMidiDuration(converter: IMidiConverter): BasicMIDI {
     const midi = BasicMIDI.fromArrayBuffer(converter.midi);
-    if (Array.isArray(midi.tracks[0])) {
-      const duration = converter.timemap.reduce((duration, entry) => duration + entry.duration, 0);
-      midi.tracks[0].push({
-        ticks: Math.round(duration / (60000 / midi.tempoChanges[0].tempo / midi.timeDivision)),
-        messageStatusByte: 185,
-        messageData: new Uint16Array([50, 0]),
-      });
-      midi.flush();
-    }
+    const duration = converter.timemap.reduce((duration, entry) => duration + entry.duration, 0);
+    midi.tracks[0].addEvent({
+      ticks: Math.round(duration / (60000 / midi.tempoChanges[0].tempo / midi.timeDivision)),
+      statusByte: midiMessageTypes.controllerChange,
+      data: new Uint8Array([50, 0]),
+    }, -1);
+    midi.flush();
     return midi;
   }
 }

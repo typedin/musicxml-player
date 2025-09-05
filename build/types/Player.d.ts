@@ -51,7 +51,7 @@ export interface PlayerOptions {
      */
     mute?: boolean;
     /**
-     * (Optional) Repeat count. A value of -1 means loop forever.
+     * (Optional) Repeat count. A value of Infinity means loop forever.
      * Can also be changed dynamically via Player.repeat attribute.
      */
     repeat?: number;
@@ -135,7 +135,7 @@ export declare class Player {
      */
     get position(): number;
     /**
-     * Repeat count. A value of -1 means loop forever.
+     * Repeat count. A value of Infinity means loop forever.
      */
     set repeat(value: number);
     /**
