@@ -183,8 +183,4 @@ export class MuseScoreRenderer extends MuseScoreBase implements ISheetRenderer {
   }
 
   resize(): void {}
-
-  get version(): string {
-    return `MuseScore v${this._mscore?.devinfo.version ?? 'Unknown'}`;
-  }
 }

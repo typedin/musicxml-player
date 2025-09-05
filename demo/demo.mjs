@@ -4,7 +4,9 @@ import {
   MuseScoreConverter,
   MuseScoreRenderer,
   VerovioConverter,
+  VerovioStaticConverter,
   VerovioRenderer,
+  VerovioStaticRenderer,
   OpenSheetMusicDisplayRenderer,
   MmaConverter,
   FetchConverter,
@@ -15,7 +17,6 @@ import {
   Converter,
   Version
 } from 'https://cdn.jsdelivr.net/npm/ireal-musicxml@latest/+esm';
-import { setTimingsrc } from 'https://cdn.jsdelivr.net/npm/timingsrc@latest/+esm';
 
 const DEFAULT_RENDERER = 'vrv';
 const DEFAULT_OUTPUT = 'local';
@@ -23,7 +24,7 @@ const DEFAULT_SHEET = 'data/asa-branca.musicxml';
 const DEFAULT_GROOVE = 'Default';
 const DEFAULT_CONVERTER = 'vrv';
 const DEFAULT_VELOCITY = 1;
-const DEFAULT_REPEAT = 1;
+const DEFAULT_REPEAT = 0;
 const DEFAULT_OPTIONS = {
   unroll: false,
   horizontal: false,
@@ -39,12 +40,12 @@ const g_state = {
   player: null,
   params: null,
   musicXml: null,
+  tuning: '',
   options: DEFAULT_OPTIONS,
 }
 
 async function createPlayer() {
   // Destroy previous player.
-  g_state.player?.timingObject.removeEventListener(handleTimingObjectChange);
   g_state.player?.destroy();
 
   // Set the player parameters.
@@ -84,11 +85,12 @@ async function createPlayer() {
     'vrv': true,
     'osmd': true,
     'mscore': '.mscore.json',
+    'vrvs': '.vrv.json',
   })) {
     const input = document.getElementById(`renderer-${k}`);
     try {
       if (typeof v === 'string') {
-        await fetish(base.replace(/\.\w+$/, v), { method: 'HEAD' })
+        await fetish(base.replace(/\.\w+$/, v), { method: 'HEAD' });
       }
       input.disabled = false;
     }
@@ -99,17 +101,18 @@ async function createPlayer() {
       }
     }
   }
-  document.getElementById(`renderer-${renderer}`).setAttribute('checked', 'checked');
+  document.getElementById(`renderer-${renderer}`).checked = true;
   for (const [k, v] of Object.entries({
     'vrv': true,
     'mma': async () => fetish(window.location.href + 'mma/', { method: 'HEAD' }),
     'midi': '.mid',
     'mscore': '.mscore.json',
+    'vrvs': '.vrv.json',
   })) {
     const input = document.getElementById(`converter-${k}`);
     try {
       if (typeof v === 'string') {
-        await fetish(base.replace(/\.\w+$/, v), { method: 'HEAD' })
+        await fetish(base.replace(/\.\w+$/, v), { method: 'HEAD' });
       }
       else if (typeof v === 'function') {
         await v();
@@ -123,7 +126,9 @@ async function createPlayer() {
       }
     }
   }
-  document.getElementById(`converter-${converter}`).setAttribute('checked', 'checked');
+  document.getElementById(`converter-${converter}`).checked = true;
+  document.getElementById('grooves').disabled = converter !== 'mma';
+  document.getElementById('tuning').disabled = converter !== 'vrv';
 
   // Create new player.
   if (g_state.musicXml) {
@@ -136,27 +141,25 @@ async function createPlayer() {
         converter: await createConverter(converter, sheet, groove),
         unroll: options.unroll,
         mute: options.mute,
-        repeat: Number(repeat),
+        repeat: repeat === '-1' ? Infinity : Number(repeat),
         velocity: Number(velocity),
+        soundfontUri: 'data/GeneralUserGS.sf3',
       });
-
-      // Create the TimingObject listener.
-      player.timingObject.addEventListener('change', handleTimingObjectChange);
 
       // Update the UI elements.
       document.getElementById('version').textContent = JSON.stringify(Object.assign({}, player.version, {
-        'ireal-musicxml': `${Version.name} ${Version.version}`
+        'ireal-musicxml': `${Version.name} v${Version.version}`
       }));
-      const filename = player.title.toLowerCase().replace(/[/\\?%*:|"'<>\s]/g, '-') ?? 'untitled';
+      const filename = player.title.toLowerCase().replace(/[/\\?%*:|"'<>\.,;\s]/g, '-') ?? 'untitled';
       const a1 = document.createElement('a');
       a1.setAttribute('href', URL.createObjectURL(new Blob([player.musicXml], { type: 'text/xml' })));
       a1.setAttribute('download', `${filename}.musicxml`);
-      a1.innerText = `${filename}.musicxml`;
+      a1.innerText = 'Download MusicXML';
       document.getElementById('download-musicxml').appendChild(a1);
       const a2 = document.createElement('a');
-      a2.setAttribute('href', URL.createObjectURL(new Blob([await player.midi()], { type: 'audio/midi' })));
+      a2.setAttribute('href', URL.createObjectURL(new Blob([player.midi], { type: 'audio/midi' })));
       a2.setAttribute('download', `${filename}.mid`);
-      a2.innerText = `${filename}.mid`;
+      a2.innerText = 'Download MIDI';
       document.getElementById('download-midi').appendChild(a2);
 
       // Save the state and player parameters.
@@ -198,6 +201,11 @@ async function createRenderer(renderer, sheet, options) {
         element.disabled = true;
       });
       return new MuseScoreRenderer(base.replace(/\.\w+$/, '.mscore.json'));
+    case 'vrvs':
+      document.querySelectorAll('.renderer-option').forEach(element => {
+        element.disabled = true;
+      });
+      return new VerovioStaticRenderer([base.replace(/\.\w+$/, '.vrv.svg')], base.replace(/\.\w+$/, '.vrv.json'));
   }
 }
 
@@ -215,7 +223,9 @@ async function createConverter(converter, sheet, groove) {
         return new FetchConverter(midi);
       }
     case 'vrv':
-      return new VerovioConverter();
+      return new VerovioConverter({
+        tuning: g_state.tuning
+      });
     case 'mma':
       const parameters = {};
       if (groove !== DEFAULT_GROOVE) {
@@ -224,6 +234,8 @@ async function createConverter(converter, sheet, groove) {
       return new MmaConverter(window.location.href + 'mma/', parameters);
     case 'mscore':
       return new MuseScoreConverter(base.replace(/\.\w+$/, '.mscore.json'));
+    case 'vrvs':
+      return new VerovioStaticConverter(base.replace(/\.\w+$/, '.mid'), base.replace(/\.\w+$/, '.vrv.json'))
   }
 }
 
@@ -251,7 +263,7 @@ async function populateGrooves() {
   const grooves = document.getElementById('grooves');
   const groovesList = document.getElementById('grooves-list');
   try {
-    const lines = await (await fetish(`${getMmaEndpoint()}/grooves`)).text();
+    const lines = await (await fetish(window.location.href + 'mma/grooves')).text();
     ['Default', 'No groove override, just whatever is specified in the score.', 'None', 'No groove, just the chords.'].concat(lines.split('\n')).forEach((line, index, lines) => {
       if (index % 2 === 1) {
         const option = document.createElement('option');
@@ -265,9 +277,6 @@ async function populateGrooves() {
   catch (error) {
     grooves.disabled = true;
   }
-}
-
-function handleTimingObjectChange(e) {
 }
 
 function handleGrooveSelect(e) {
@@ -321,7 +330,11 @@ function populateSheets(ireal) {
 async function handleSampleSelect(e) {
   if (!e.target.value) return;
   const sheet = e.target.value;
+  const option = document.querySelector(`#samples option[value="${sheet}"]`);
+  document.getElementById('sheets').textContent = '';
   try {
+    g_state.params.set('renderer', option.getAttribute('data-renderer'));
+    g_state.params.set('converter', option.getAttribute('data-converter'));
     if (sheet.endsWith('.musicxml') || sheet.endsWith('.mxl')) {
       const musicXml = await (await fetish(sheet)).arrayBuffer();
       g_state.musicXml = musicXml;
@@ -411,29 +424,6 @@ function handleOptionChange(e) {
   }
 }
 
-function handleAudioChange(e) {
-  const file = e.target.files[0];
-  document.getElementById('audio-track').setAttribute('src', URL.createObjectURL(file));
-  document.getElementById('audio-offset').disabled = true;
-}
-
-function handleAudioLoaded(e) {
-  document.getElementById('audio-offset').disabled = false;
-  setTimingsrc(
-    document.getElementById('audio-track'),
-    g_state.player?.timingObject,
-    ({ position, ...vector }) => ({ ...vector, position: position + Number(document.getElementById('audio-offset').value) / 1000 })
-  );
-}
-
-function handleAudioDelayChange(e) {
-  setTimingsrc(
-    document.getElementById('audio-track'),
-    g_state.player?.timingObject,
-    ({ position, ...vector }) => ({ ...vector, position: position + Number(document.getElementById('audio-offset').value) / 1000 })
-  );
-}
-
 function handleVelocityChange(e) {
   g_state.params.set('velocity', e.target.value);
   if (g_state.player) {
@@ -448,6 +438,25 @@ function handleRepeatChange(e) {
     g_state.player.repeat = Number(e.target.value);
   }
   savePlayerOptions();
+}
+
+async function handleTuningText(filename, tuning) {
+  g_state.tuning = tuning;
+  createPlayer();
+}
+
+async function handleTuningUpload(e) {
+  const reader = new FileReader();
+  const file = e.target.files[0];
+  reader.onloadend = async (upload) => {
+    await handleTuningText(file.name, upload.target.result);
+  };
+  if (file.size < 100*1024) {
+    reader.readAsText(file);
+  }
+  else {
+    document.getElementById('error').textContent = 'Tuning file is too large.';
+  }
 }
 
 function savePlayerOptions() {
@@ -483,13 +492,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('input[name="converter"]').forEach(input => {
     input.addEventListener('change', handleConverterChange);
     if (input.value === (g_state.params.get('converter') ?? DEFAULT_CONVERTER)) {
-      input.setAttribute('checked', 'checked');
+      input.checked = true;
     }
   });
   document.querySelectorAll('input[name="renderer"]').forEach(input => {
     input.addEventListener('change', handleRendererChange);
     if (input.value === (g_state.params.get('renderer') ?? DEFAULT_RENDERER)) {
-      input.setAttribute('checked', 'checked');
+      input.checked = true;
     }
   });
   document.getElementById('play').addEventListener('click', async () => {
@@ -507,21 +516,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('grooves').addEventListener('change', handleGrooveSelect);
   document.getElementById('outputs').addEventListener('change', handleMidiOutputSelect);
   document.getElementById('ireal').addEventListener('change', handleIRealChange);
-  document.getElementById('audio-file').addEventListener('change', handleAudioChange);
-  document.getElementById('audio-track').addEventListener('loadeddata', handleAudioLoaded);
-  document.getElementById('audio-offset').addEventListener('change', handleAudioDelayChange);
   document.getElementById('velocity').addEventListener('change', handleVelocityChange);
   document.getElementById('repeat').addEventListener('change', handleRepeatChange);
-  document.querySelectorAll('.renderer-option').forEach(element => {
+  document.getElementById('tuning').addEventListener('change', handleTuningUpload);
+  document.querySelectorAll('.option').forEach(element => {
     if (!!g_state.options[element.id.replace('option-', '')]) {
-      element.setAttribute('checked', 'checked');
+      element.checked = true;
     }
     element.addEventListener('change', handleOptionChange);
   });
   window.addEventListener('keydown', handlePlayPauseKey);
 
   // Initialize Web MIDI.
-  if (navigator.requestMIDIAccess) navigator.requestMIDIAccess().then(webmidi => {
+  if (navigator.requestMIDIAccess) navigator.requestMIDIAccess({
+    sysex: true
+  }).then(webmidi => {
     populateMidiOutputs(webmidi);
     webmidi.onstatechange = () => populateMidiOutputs(webmidi);
     g_state.webmidi = webmidi;

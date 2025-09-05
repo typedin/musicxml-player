@@ -1,22 +1,22 @@
 {
   "name": "musicxml-player",
-  "version": "0.20.1",
+  "version": "1.0.0",
   "description": "A TypeScript component that loads and plays MusicXML files in the browser using Web Audio and Web MIDI.",
   "types": "./build/types/index.d.ts",
   "exports": {
-    "import": "./build/musicxml-player.js",
+    "import": "./build/musicxml-player.mjs",
     "require": "./build/musicxml-player.cjs"
   },
   "devDependencies": {
     "@esm-bundle/chai": "^4.3.4-fix.0",
     "@esm-bundle/chai-as-promised": "^7.1.1",
-    "@web/test-runner": "^0.18.2",
-    "@web/test-runner-puppeteer": "^0.16.0",
-    "concurrently": "^8.0.1",
+    "@types/verovio": "^3.13.4",
+    "@types/webmidi": "^2.1.0",
+    "@web/test-runner": "^0.20.2",
+    "@web/test-runner-puppeteer": "^0.18.0",
     "esbuild": "0.24.0",
     "esbuild-plugins-node-modules-polyfill": "^1.6.8",
     "eslint": "^9.13.0",
-    "json-midi-message-encoder": "^4.1.18",
     "local-web-server": "^5.3.0",
     "sinon": "^19.0.2",
     "typescript": "^4.9.5",
@@ -24,12 +24,11 @@
   },
   "scripts": {
     "test": "web-test-runner src/**/*.spec.js --node-resolve",
-    "test:lint": "eslint src/**/*.ts",
+    "test:lint": "eslint --fix src/**/*.ts",
     "build": "npm run build:esm && npm run build:cjs && npm run build:d.ts",
     "build:esm": "node esbuild.mjs --format=esm",
     "build:cjs": "node esbuild.mjs --format=cjs",
     "build:d.ts": "tsc --emitDeclarationOnly --outDir build/types",
-    "demo": "concurrently --kill-others \"PORT=3000 musicxml-midi\" \"npm run demo:develop\"",
     "demo:develop": "ws -d demo --rewrite '/mma/(.*) -> http://localhost:3000/$1' -p ${PORT:-8080}",
     "demo:server": "ws -d demo -p ${PORT:-8082} -z --log.format combined",
     "prepublishOnly": "npm run build:lint && npm run test && npm run build",
@@ -46,17 +45,11 @@
   },
   "homepage": "https://github.com/infojunkie/musicxml-player#readme",
   "dependencies": {
-    "@types/verovio": "^3.13.4",
-    "json-midi-encoder": "^5.1.32",
-    "midi-json-parser": "^8.1.14",
-    "midi-player": "github:infojunkie/midi-player",
+    "midi-file": "^1.2.4",
     "opensheetmusicdisplay": "^1.7.1",
-    "standardized-audio-context": "^25.3.35",
-    "timing-object": "^3.1.61",
-    "timingsrc": "^1.4.5",
+    "spessasynth_core": "^4.0.0",
+    "spessasynth_lib": "^4.0.0",
     "unzipit": "^1.4.3",
-    "verovio": "^5.0.0",
-    "webaudiofont": "^3.0.4",
-    "worker-timers": "^8.0.0"
+    "verovio": "npm:@music-i18n/verovio@^1.0.0"
   }
 }

@@ -1,5 +1,3 @@
-import { parseArrayBuffer as parseMidiBuffer } from 'midi-json-parser';
-import type { IMidiFile } from 'midi-json-parser-worker';
 import type { MeasureTimemap } from './IMidiConverter';
 import { atoab, fetish } from './helpers';
 import SaxonJS from './saxon-js/SaxonJS3.rt';
@@ -61,11 +59,11 @@ export type MuseScoreDownloader = (musicXml: string) => {
 /**
  * Base class for MuseScore scores that parses the score metadata and creates a timemap.
  *
- * Generate the score media with MuseScore as follows: `./mscore /path/to/score.musicxml --score-media > /path/to/score.json`
+ * Generate the score media with MuseScore as follows: `mscore /path/to/score.musicxml --score-media > /path/to/score.json`
  */
 export class MuseScoreBase {
   protected _mscore?: ReturnType<MuseScoreDownloader>;
-  protected _midi?: IMidiFile;
+  protected _midi?: ArrayBuffer;
   protected _timemap?: MeasureTimemap;
   protected _mpos?: object;
 
@@ -97,7 +95,7 @@ export class MuseScoreBase {
     }
 
     // Parse the MIDI.
-    this._midi = await parseMidiBuffer(atoab(this._mscore.midi));
+    this._midi = atoab(this._mscore.midi);
 
     // Parse and create the timemap.
     this._timemap = [];
@@ -124,5 +122,9 @@ export class MuseScoreBase {
     // Compute last measure duration by getting total duration minus last measure onset.
     this._timemap.last().duration =
       this._mscore.metadata.duration * 1000 - this._timemap.last().timestamp;
+  }
+
+  get version(): string {
+    return `mscore v${this._mscore?.devinfo.version ?? 'Unknown'}`;
   }
 }

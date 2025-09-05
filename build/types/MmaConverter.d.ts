@@ -1,4 +1,3 @@
-import type { IMidiFile } from 'midi-json-parser-worker';
 import type { IMidiConverter, MeasureTimemap } from './IMidiConverter';
 /**
  * Implementation of IMidiConverter that queries the musicxml-midi API (@see https://github.com/infojunkie/musicxml-midi)
@@ -10,17 +9,17 @@ export declare class MmaConverter implements IMidiConverter {
         name: string;
         version: string;
     };
-    protected _midi?: IMidiFile;
+    protected _midi?: ArrayBuffer;
     protected _timemap?: MeasureTimemap;
     protected _uri: string;
     constructor(uri: string, _parameters?: Record<string, string> | undefined);
     initialize(musicXml: string): Promise<void>;
-    get midi(): IMidiFile;
+    get midi(): ArrayBuffer;
     get timemap(): MeasureTimemap;
     get version(): string;
     /**
      * Parse an IMidiFile into a timemap.
      */
-    protected static _parseTimemap(midi: IMidiFile): MeasureTimemap;
+    protected static _parseTimemap(buffer: ArrayBuffer): MeasureTimemap;
 }
 //# sourceMappingURL=MmaConverter.d.ts.map
