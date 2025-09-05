@@ -16,7 +16,7 @@ import {
   Playlist,
   Converter,
   Version
-} from 'https://cdn.jsdelivr.net/npm/ireal-musicxml@latest/+esm';
+} from 'https://cdn.jsdelivr.net/npm/@music-i18n/ireal-musicxml@latest/+esm';
 
 const DEFAULT_RENDERER = 'vrv';
 const DEFAULT_OUTPUT = 'local';

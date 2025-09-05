@@ -2,9 +2,9 @@ MusicXML Player
 ===============
 
 [![npm](https://img.shields.io/npm/v/%40music-i18n%2Fmusicxml-player)](https://www.npmjs.com/package/@music-i18n/musicxml-player)
-[![Build](https://github.com/infojunkie/musicxml-player/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/infojunkie/musicxml-player/actions/workflows/test.yml)
+[![build](https://github.com/infojunkie/musicxml-player/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/infojunkie/musicxml-player/actions/workflows/test.yml)
 
-A TypeScript component that loads   and plays MusicXML files in the browser using Web Audio and Web MIDI.
+A TypeScript component that loads and plays MusicXML files in the browser using Web Audio and Web MIDI.
 
 ![Screenshot](screenshot.png?raw=true)
 
