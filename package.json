@@ -1,6 +1,6 @@
 {
   "name": "@music-i18n/musicxml-player",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A TypeScript component that loads and plays MusicXML files in the browser using Web Audio and Web MIDI.",
   "types": "./build/types/index.d.ts",
   "exports": {
@@ -28,13 +28,12 @@
   "scripts": {
     "test": "web-test-runner src/**/*.spec.js --node-resolve",
     "test:lint": "eslint --fix src/**/*.ts",
-    "build": "npm run build:esm && npm run build:cjs && npm run build:d.ts",
+    "build": "./apply-patches.sh && npm run build:esm && npm run build:cjs && npm run build:d.ts",
     "build:esm": "node esbuild.mjs --format=esm",
     "build:cjs": "node esbuild.mjs --format=cjs",
     "build:d.ts": "tsc --emitDeclarationOnly --outDir build/types",
     "demo:develop": "ws -d demo --rewrite '/mma/(.*) -> http://localhost:3000/$1' -p ${PORT:-8080}",
-    "demo:server": "ws -d demo -p ${PORT:-8082} -z --log.format combined",
-    "postinstall": "./apply-patches.sh"
+    "demo:server": "ws -d demo -p ${PORT:-8082} -z --log.format combined"
   },
   "repository": {
     "type": "git",
