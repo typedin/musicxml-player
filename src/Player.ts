@@ -368,6 +368,13 @@ export class Player {
   }
 
   /**
+   * MIDI output. A value of undefined means internal synth.
+   */
+  set output(output: WebMidi.MIDIOutput | undefined) {
+    this._sequencer.connectMIDIOutput(output);
+  }
+
+  /**
    * Unroll the score by expanding all repeats and jumps into a linear score.
    */
   protected static async _unrollMusicXml(musicXml: string): Promise<string> {

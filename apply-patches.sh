@@ -1,6 +1,6 @@
 #/bin/sh
 
-PATCH_FILES=$(ls ./patches/*.patch)
+PATCH_FILES=$(ls ./src/patches/*.patch)
 
 for f in $PATCH_FILES
 do

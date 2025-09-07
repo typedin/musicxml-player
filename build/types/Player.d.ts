@@ -147,6 +147,10 @@ export declare class Player {
      */
     set velocity(value: number);
     /**
+     * MIDI output. A value of undefined means internal synth.
+     */
+    set output(output: WebMidi.MIDIOutput | undefined);
+    /**
      * Unroll the score by expanding all repeats and jumps into a linear score.
      */
     protected static _unrollMusicXml(musicXml: string): Promise<string>;

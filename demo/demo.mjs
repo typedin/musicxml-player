@@ -241,9 +241,9 @@ async function createConverter(converter, sheet, groove) {
 
 function createOutput(output) {
   if (g_state.webmidi) {
-    return Array.from(g_state.webmidi.outputs.values()).find(o => o.id === output) ?? null;
+    return Array.from(g_state.webmidi.outputs.values()).find(o => o.id === output) ?? undefined;
   }
-  return null;
+  return undefined;
 }
 
 function populateMidiOutputs(webmidi) {
@@ -289,7 +289,10 @@ function handleGrooveSelect(e) {
 
 function handleMidiOutputSelect(e) {
   g_state.params.set('output', e.target.value);
-  createPlayer();
+  if (g_state.player) {
+    g_state.player.output = createOutput(e.target.value);
+  }
+  savePlayerOptions();
 }
 
 function handleRendererChange(e) {
@@ -435,7 +438,7 @@ function handleVelocityChange(e) {
 function handleRepeatChange(e) {
   g_state.params.set('repeat', e.target.value);
   if (g_state.player) {
-    g_state.player.repeat = Number(e.target.value);
+    g_state.player.repeat = e.target.value === '-1' ? Infinity : Number(e.target.value);
   }
   savePlayerOptions();
 }
