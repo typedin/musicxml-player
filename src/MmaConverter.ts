@@ -1,5 +1,5 @@
-import { parseMidi } from 'midi-file'
 import type { IMidiConverter, MeasureTimemap } from './IMidiConverter';
+import { FetchConverter } from './FetchConverter';
 import { assertIsDefined, fetish } from './helpers';
 
 /**
@@ -39,7 +39,7 @@ export class MmaConverter implements IMidiConverter {
       body: formData,
     });
     this._midi = await response.arrayBuffer();
-    this._timemap = MmaConverter._parseTimemap(this._midi);
+    this._timemap = await FetchConverter.parseTimemap(musicXml);
   }
 
   get midi(): ArrayBuffer {
@@ -54,46 +54,5 @@ export class MmaConverter implements IMidiConverter {
 
   get version(): string {
     return `MmaConverter v${this._version?.version ?? 'Unknown'}`;
-  }
-
-  /**
-   * Parse an IMidiFile into a timemap.
-   */
-  protected static _parseTimemap(buffer: ArrayBuffer): MeasureTimemap {
-    const timemap: MeasureTimemap = [];
-    const midi = parseMidi(new Uint8Array(buffer));
-    let microsecondsPerQuarter = 500000; // 60,000,000 microseconds per minute / 120 beats per minute
-    let offset = 0;
-    midi.tracks[0].forEach((event) => {
-      if (event.type === 'setTempo') {
-        microsecondsPerQuarter = Number(event.microsecondsPerBeat);
-      }
-      offset += Number(event.deltaTime);
-      if (event.type === 'marker') {
-        const marker = event.text.split(':');
-        if (
-          marker[0].localeCompare('Measure', undefined, {
-            sensitivity: 'base',
-          }) === 0
-        ) {
-          const measure = Number(marker[1]);
-          const duration = Number(marker[2]);
-          const timestamp = Math.round(offset * (microsecondsPerQuarter / (midi.header.ticksPerBeat ?? 24))) / 1000;
-          timemap.push({
-            measure,
-            timestamp,
-            duration
-          });
-        }
-      }
-    });
-
-    if (!timemap.length) {
-      console.warn(
-        `[MmaConverter._parseTimemap] Could not find any Measure:N marker message in the MIDI file.`,
-      );
-    }
-
-    return timemap;
   }
 }

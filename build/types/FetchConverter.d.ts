@@ -22,6 +22,5 @@ export declare class FetchConverter implements IMidiConverter {
      * Parse a MusicXML score into a timemap.
      */
     static parseTimemap(musicXml: string): Promise<MeasureTimemap>;
-    protected static _parseTimemap(musicXml: string): Promise<MeasureTimemap>;
 }
 //# sourceMappingURL=FetchConverter.d.ts.map

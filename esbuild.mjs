@@ -28,7 +28,7 @@ const targets = {
   }
 }
 
-const format = argv('format') ?? 'mjs';
+const format = argv('format') ?? 'esm';
 build({
   entryPoints: ['src/index.ts'],
   plugins: [nodeModulesPolyfillPlugin()],

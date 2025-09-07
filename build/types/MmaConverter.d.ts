@@ -17,9 +17,5 @@ export declare class MmaConverter implements IMidiConverter {
     get midi(): ArrayBuffer;
     get timemap(): MeasureTimemap;
     get version(): string;
-    /**
-     * Parse an IMidiFile into a timemap.
-     */
-    protected static _parseTimemap(buffer: ArrayBuffer): MeasureTimemap;
 }
 //# sourceMappingURL=MmaConverter.d.ts.map
