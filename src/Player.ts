@@ -263,12 +263,10 @@ export class Player {
       requestAnimationFrame(synchronizeMidi);
     };
 
-    // Schedule first cursor movement.
-    requestAnimationFrame(synchronizeMidi);
-
     // Activate the MIDI player.
     this._context.resume().then(() => {
       this._state = PlayerState.Playing;
+      requestAnimationFrame(synchronizeMidi);
       this._sequencer.play();
     })
   }
