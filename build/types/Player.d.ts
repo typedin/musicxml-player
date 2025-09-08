@@ -67,6 +67,7 @@ export declare class Player {
     protected _parseResult: MusicXmlParseResult;
     protected _musicXml: string;
     protected _synthesizer: Synthetizer;
+    protected _context: AudioContext;
     /**
      * Create a new instance of the player.
      *
@@ -80,7 +81,7 @@ export declare class Player {
     protected _observer: ResizeObserver;
     protected _duration: number;
     protected _state: PlayerState;
-    protected constructor(_options: PlayerOptions, _sheet: HTMLElement, _parseResult: MusicXmlParseResult, _musicXml: string, _synthesizer: Synthetizer);
+    protected constructor(_options: PlayerOptions, _sheet: HTMLElement, _parseResult: MusicXmlParseResult, _musicXml: string, _synthesizer: Synthetizer, _context: AudioContext);
     /**
      * Destroy the instance by freeing all resources and disconnecting observers.
      */

@@ -10,15 +10,15 @@ import { Cursor } from './Cursor';
  */
 export declare class VerovioStaticRenderer extends VerovioBase implements ISheetRenderer {
     protected _svgOrUris: Array<ArrayBuffer | string>;
-    protected _timemapOrUri: TimeMapEntryFixed[] | string;
+    protected _eventsOrUri: TimeMapEntryFixed[] | string;
     player?: Player;
     protected _cursor: Cursor;
-    protected _timemap?: (TimeMapEntryFixed & {
+    protected _events?: (TimeMapEntryFixed & {
         rectNotes: DOMRect[];
         notesOn: string[];
     })[];
     protected _measures: (MeasureTimemapEntry & {
-        entry: number;
+        eventEntry: number;
         rectMeasure: DOMRect;
         rectSystem: DOMRect;
     })[];
@@ -27,8 +27,8 @@ export declare class VerovioStaticRenderer extends VerovioBase implements ISheet
         fill: string | null;
         stroke: string | null;
     }[];
-    protected _currentEntry?: number;
-    constructor(_svgOrUris: Array<ArrayBuffer | string>, _timemapOrUri: TimeMapEntryFixed[] | string);
+    protected _currentEventEntry?: number;
+    constructor(_svgOrUris: Array<ArrayBuffer | string>, _eventsOrUri: TimeMapEntryFixed[] | string);
     destroy(): void;
     initialize(container: HTMLElement, _musicXml: string): Promise<void>;
     moveTo(index: MeasureIndex, start: MillisecsTimestamp, offset: MillisecsTimestamp, duration?: MillisecsTimestamp): void;

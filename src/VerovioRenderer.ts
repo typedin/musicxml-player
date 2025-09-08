@@ -287,6 +287,7 @@ export class VerovioRenderer implements ISheetRenderer {
         [...(event.on ?? []), ...(event.restsOn ?? [])].forEach((domid) => {
           firstNoteid ??= domid;
           document.getElementById(domid)?.addEventListener('click', () => {
+            console.log(measure, event);
             this.player?.moveTo(measure.measure, measure.timestamp, event.tstamp - measure.timestamp);
           });
         });

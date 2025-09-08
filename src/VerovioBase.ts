@@ -1,20 +1,11 @@
-import { VerovioOptions } from 'verovio';
+import { VerovioOptions, TimeMapEntry } from 'verovio';
 import { VerovioToolkit } from 'verovio/esm';
 import type { MeasureTimemap } from './IMidiConverter';
 
-export interface TimeMapEntryFixed {
-  measureOn?: string;
-  tstamp: number;
-  qstamp: number;
-  on?: string[];
-  off?: string[];
+export interface TimeMapEntryFixed extends TimeMapEntry {
   restsOn?: string[];
   restsOff?: string[];
-  tempo?: number;
-}
-
-export interface CursorOptions {
-  scrollOffset: number;
+  measureOn?: string;
 }
 
 export interface ElementsAtTimeFixed {
@@ -31,6 +22,10 @@ export interface VerovioToolkitFixed extends VerovioToolkit {
 
 export interface VerovioOptionsFixed extends VerovioOptions {
   tuning?: string;
+}
+
+export interface CursorOptions {
+  scrollOffset: number;
 }
 
 /**

@@ -126,7 +126,7 @@ export class Player {
       await options.renderer.initialize(sheet, musicXml);
 
       // Finally, create the player instance.
-      return new Player(options, sheet, parseResult, musicXml, synth);
+      return new Player(options, sheet, parseResult, musicXml, synth, context);
     } catch (error) {
       console.error(`[Player.create] ${error}`);
       throw error;
@@ -145,6 +145,7 @@ export class Player {
     protected _parseResult: MusicXmlParseResult,
     protected _musicXml: string,
     protected _synthesizer: Synthetizer,
+    protected _context: AudioContext
   ) {
     // Inform the renderer that we're here.
     this._options.renderer.player = this;
@@ -266,8 +267,10 @@ export class Player {
     requestAnimationFrame(synchronizeMidi);
 
     // Activate the MIDI player.
-    this._state = PlayerState.Playing;
-    this._sequencer.play();
+    this._context.resume().then(() => {
+      this._state = PlayerState.Playing;
+      this._sequencer.play();
+    })
   }
 
   /**

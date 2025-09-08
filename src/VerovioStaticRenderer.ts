@@ -14,12 +14,12 @@ import pkg from '../package.json';
 export class VerovioStaticRenderer extends VerovioBase implements ISheetRenderer {
   player?: Player;
   protected _cursor: Cursor;
-  protected _timemap?: (TimeMapEntryFixed & {
+  protected _events?: (TimeMapEntryFixed & {
     rectNotes: DOMRect[],
     notesOn: string[],
   })[];
   protected _measures: (MeasureTimemapEntry & {
-    entry: number,
+    eventEntry: number,
     rectMeasure: DOMRect,
     rectSystem: DOMRect,
   })[] = [];
@@ -28,11 +28,11 @@ export class VerovioStaticRenderer extends VerovioBase implements ISheetRenderer
     fill: string | null,
     stroke: string | null,
   }[] = []; // Currently highlighted notes and their saved attributes
-  protected _currentEntry?: number; // Currently highlighted timemap entry
+  protected _currentEventEntry?: number; // Currently highlighted event entry
 
   constructor(
     protected _svgOrUris: Array<ArrayBuffer | string>,
-    protected _timemapOrUri: TimeMapEntryFixed[] | string,
+    protected _eventsOrUri: TimeMapEntryFixed[] | string,
   ) {
     super();
     this._cursor = new Cursor();
@@ -51,10 +51,10 @@ export class VerovioStaticRenderer extends VerovioBase implements ISheetRenderer
         : enc.decode(svgOrUri)
     ));
     const timemap =
-      typeof this._timemapOrUri === 'string'
-        ? await (await fetish(this._timemapOrUri)).json()
-        : this._timemapOrUri;
-    this._timemap = timemap.map((e: TimeMapEntryFixed) => { return {...e, rectNotes: [], notesOn: []}; });
+      typeof this._eventsOrUri === 'string'
+        ? await (await fetish(this._eventsOrUri)).json()
+        : this._eventsOrUri;
+    this._events = timemap.map((e: TimeMapEntryFixed) => { return {...e, rectNotes: [], notesOn: []}; });
 
     // Display the SVGs.
     svgs.forEach((svg, i) => {
@@ -62,11 +62,19 @@ export class VerovioStaticRenderer extends VerovioBase implements ISheetRenderer
       page.setAttribute('id', `page-${i}`);
       page.innerHTML = svg;
       container.appendChild(page);
+
+      // Scale the SVG to the container width.
+      const s = page.getElementsByTagName('svg')[0];
+      const w = s.getAttribute('width')?.replace('px', '');
+      const h = s.getAttribute('height')?.replace('px', '');
+      s.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      s.setAttribute('width', '100%');
+      s.removeAttribute('height');
     });
 
     // Set up event listeners on notes and cached information for cursor movement.
-    assertIsDefined(this._timemap);
-    this._timemap.forEach((event, entry) => {
+    assertIsDefined(this._events);
+    this._events.forEach((event, eventEntry) => {
       // On new measure, save the measure information.
       if ('measureOn' in event) {
         const measure = document.getElementById(event.measureOn)!;
@@ -75,14 +83,14 @@ export class VerovioStaticRenderer extends VerovioBase implements ISheetRenderer
           measure: this._measures.length,
           timestamp: event.tstamp,
           duration: 0, // Don't care about the duration for this renderer
-          entry,
+          eventEntry,
           rectMeasure: measure.getBoundingClientRect(),
           rectSystem: system.getBoundingClientRect(),
         });
       }
 
       // Carry over the previously sounding notes and remove the ending notes.
-      event.notesOn = entry > 0 ? structuredClone(this._timemap![entry-1].notesOn) : [];
+      event.notesOn = eventEntry > 0 ? structuredClone(this._events![eventEntry-1].notesOn) : [];
       const notesOff = [...(event.off ?? []), ...(event.restsOff ?? [])];
       event.notesOn = event.notesOn.filter(n => !notesOff.includes(n));
 
@@ -105,7 +113,7 @@ export class VerovioStaticRenderer extends VerovioBase implements ISheetRenderer
 
       // Special case: If this is the first note, set the measure's bounding rect to start here
       // in order to avoid objects such as time signature and key signature.
-      if (entry === 0) {
+      if (eventEntry === 0) {
         measure.rectMeasure.width -= event.rectNotes[0].left - measure.rectMeasure.left;
         measure.rectMeasure.x = event.rectNotes[0].x;
       }
@@ -122,18 +130,18 @@ export class VerovioStaticRenderer extends VerovioBase implements ISheetRenderer
     offset: MillisecsTimestamp,
     duration?: MillisecsTimestamp,
   ): void {
-    // Find timemap entry that corresponds to current position.
-    // Start searching at the incoming measure and find the subsequent timemap entry with matching timestamp.
-    assertIsDefined(this._timemap);
-    let entry = this._measures[index].entry;
-    while (entry < this._timemap.length - 1 && this._timemap[entry + 1].tstamp <= start + offset) {
-      entry++;
+    // Find event entry that corresponds to current position.
+    // Start searching at the incoming measure and find the subsequent event entry with matching timestamp.
+    assertIsDefined(this._events);
+    let eventEntry = this._measures[index].eventEntry;
+    while (eventEntry < this._events.length - 1 && this._events[eventEntry + 1].tstamp <= start + offset) {
+      eventEntry++;
     }
 
     // Restore the deactivated notes to their previous attributes.
     // Highlight the activated notes and save their attributes.
-    if (this._currentEntry !== entry) {
-      const notesOn = this._timemap[entry].notesOn;
+    if (this._currentEventEntry !== eventEntry) {
+      const notesOn = this._events[eventEntry].notesOn;
       const notesOff = this._currentNotes.filter((note) => !notesOn.includes(note.domid));
       notesOff.forEach((note) => {
         const element = document.getElementById(note.domid);
@@ -149,13 +157,13 @@ export class VerovioStaticRenderer extends VerovioBase implements ISheetRenderer
         element?.setAttribute('fill', 'rgb(234, 107, 36)');
         element?.setAttribute('stroke', 'rgb(234, 107, 36)');
       });
-      this._currentEntry = entry;
+      this._currentEventEntry = eventEntry;
     }
 
     // Calculate cursor position.
     const rectMeasure = this._measures[index].rectMeasure;
     const rectSystem = this._measures[index].rectSystem;
-    const rectNote = this._timemap[entry].rectNotes[0]; // guaranteed to have at least one
+    const rectNote = this._events[eventEntry].rectNotes[0]; // guaranteed to have at least one
     this._cursor.moveTo(
       duration
         ? rectMeasure.left + Math.round(Math.min(1.0, offset / duration) * rectMeasure.width)
@@ -165,7 +173,9 @@ export class VerovioStaticRenderer extends VerovioBase implements ISheetRenderer
     );
   }
 
-  resize(): void {}
+  resize(): void {
+    console.log('resize');
+  }
 
   get version(): string {
     return `${pkg.name} v${pkg.version}`;
