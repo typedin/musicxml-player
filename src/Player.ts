@@ -408,11 +408,18 @@ export class Player {
   protected static _adjustMidiDuration(converter: IMidiConverter): BasicMIDI {
     const midi = BasicMIDI.fromArrayBuffer(converter.midi);
     const duration = converter.timemap.reduce((duration, entry) => duration + entry.duration, 0);
-    midi.tracks[0].addEvent({
-      ticks: Math.round(duration / (60000 / midi.tempoChanges[0].tempo / midi.timeDivision)),
+    const ticks = Math.round(duration / (60000 / midi.tempoChanges[0].tempo / midi.timeDivision));
+    midi.tracks[0].deleteEvent(-1);
+    midi.tracks[0].pushEvent({
+      ticks,
       statusByte: midiMessageTypes.controllerChange,
       data: new Uint8Array([50, 0]),
-    }, -1);
+    });
+    midi.tracks[0].pushEvent({
+      ticks,
+      statusByte: midiMessageTypes.endOfTrack,
+      data: new Uint8Array(),
+    });
     midi.flush();
     return midi;
   }

@@ -174,7 +174,6 @@ export class VerovioStaticRenderer extends VerovioBase implements ISheetRenderer
   }
 
   resize(): void {
-    console.log('resize');
   }
 
   get version(): string {
