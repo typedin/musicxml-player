@@ -2,7 +2,7 @@
 import { BasicMIDI } from 'spessasynth_core';
 import { WorkletSynthesizer as Synthetizer, Sequencer } from 'spessasynth_lib';
 import { MusicXmlParseResult } from './helpers';
-import type { IMidiConverter } from './IMidiConverter';
+import type { IMIDIConverter } from './IMIDIConverter';
 import type { ISheetRenderer } from './ISheetRenderer';
 export type MeasureIndex = number;
 export type MillisecsTimestamp = number;
@@ -16,53 +16,73 @@ export declare enum PlayerState {
  */
 export interface PlayerOptions {
     /**
-     * The HTML element containing the sheet.
+     * The HTML element containing the sheet, as DOM element object or its id.
      */
     container: HTMLDivElement | string;
     /**
-     * The input MusicXML score, as text string or ArrayBuffer (for compressed MXL).
+     * The input MusicXML score, as text string or ArrayBuffer (e.g. for compressed MXL).
      */
     musicXml: ArrayBuffer | string;
     /**
-     * An instance of the sheet renderer used to render the score.
+     * An instance of ISheetRenderer interface used to render the score.
      */
     renderer: ISheetRenderer;
     /**
-     * An instance of the MIDI converter used to convert the score to MIDI.
+     * An instance of IMIDIConverter interface used to convert the score to MIDI.
      */
-    converter: IMidiConverter;
+    converter: IMIDIConverter;
     /**
-     * (Optional) An instance of the MIDI output to send the note events.
-     * If omitted, a local Web Audio synthesizer will be used.
+     * An instance of the MIDI output to send the note events.
+     * Optional, default: local Web Audio synthesizer
      */
-    output?: WebMidi.MIDIOutput;
+    output?: WebMidi.MIDIOutput | null;
     /**
-     * (Optional) Soundfond URL.
-     * If omitted, the default soundfont will be used.
+     * URL of soundfont for local Web Audio synthesizer.
+     * Optional, default: https://spessasus.github.io/SpessaSynth/soundfonts/GeneralUserGS.sf3
      */
     soundfontUri?: string;
     /**
-     * (Optional) A flag to unroll the score before displaying it and playing it.
+     * URL of MusicXML => Timemap XSL transformation.
+     * Optional, default: https://raw.githubusercontent.com/infojunkie/musicxml-midi/main/build/timemap.sef.json
+     * Note that the code expects to find the file unroll.xsl / unroll.sef.json at the same path.
+     */
+    timemapXslUri?: string;
+    /**
+     * A flag to unroll the score before displaying it and playing it.
+     * Optional, default: false
      */
     unroll?: boolean;
     /**
-     * (Optional) A flag to mute the player's MIDI output.
+     * A flag to mute the player's MIDI output.
+     * Optional, default: false
      * Can also be changed dynamically via Player.mute attribute.
      */
     mute?: boolean;
     /**
-     * (Optional) Repeat count. A value of Infinity means loop forever.
+     * Repeat count. A value of Infinity means loop forever.
+     * Optional, default: 1
      * Can also be changed dynamically via Player.repeat attribute.
      */
     repeat?: number;
     /**
-     * (Optional) Playback speed. A value of 1 means normal speed.
+     * Playback speed. A value of 1 means normal speed.
+     * Optional, default: 1
      * Can also be changed dynamically via Player.velocity attribute.
      */
     velocity?: number;
+    /**
+     * A flag to render the score as a single horizontal system.
+     * Optional, default: false
+     */
+    horizontal?: boolean;
+    /**
+     * A flag to center the browser window around the cursor.
+     * Optional, default: true
+     */
+    followCursor?: boolean;
 }
 export declare class Player {
-    protected _options: PlayerOptions;
+    protected _options: Required<PlayerOptions>;
     protected _sheet: HTMLElement;
     protected _parseResult: MusicXmlParseResult;
     protected _musicXml: string;
@@ -75,13 +95,14 @@ export declare class Player {
      * @returns A new instance of the player, ready to play.
      * @throws Error exception with various error messages.
      */
-    static create(options: PlayerOptions): Promise<Player>;
+    static create(_options: PlayerOptions): Promise<Player>;
     protected _sequencer: Sequencer;
     protected _midi: BasicMIDI;
     protected _observer: ResizeObserver;
     protected _duration: number;
     protected _state: PlayerState;
-    protected constructor(_options: PlayerOptions, _sheet: HTMLElement, _parseResult: MusicXmlParseResult, _musicXml: string, _synthesizer: Synthetizer, _context: AudioContext);
+    protected _abortController: AbortController;
+    protected constructor(_options: Required<PlayerOptions>, _sheet: HTMLElement, _parseResult: MusicXmlParseResult, _musicXml: string, _synthesizer: Synthetizer, _context: AudioContext);
     /**
      * Destroy the instance by freeing all resources and disconnecting observers.
      */
@@ -128,7 +149,6 @@ export declare class Player {
     get title(): string;
     /**
      * The duration of the score/MIDI file (ms).
-     * Precomputed in the constructor.
      */
     get duration(): number;
     /**
@@ -162,6 +182,6 @@ export declare class Player {
      *
      * @see https://github.com/spessasus/SpessaSynth/discussions/176
      */
-    protected static _adjustMidiDuration(converter: IMidiConverter): BasicMIDI;
+    protected static _adjustMidiDuration(converter: IMIDIConverter): BasicMIDI;
 }
 //# sourceMappingURL=Player.d.ts.map

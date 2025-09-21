@@ -6,8 +6,9 @@ import {
   parseMusicXml,
   MusicXmlParseResult,
   fetish,
+  debounce
 } from './helpers';
-import type { IMidiConverter } from './IMidiConverter';
+import type { IMIDIConverter } from './IMIDIConverter';
 import type { ISheetRenderer } from './ISheetRenderer';
 import SaxonJS from './saxon-js/SaxonJS3.rt';
 import pkg from '../package.json';
@@ -16,7 +17,7 @@ import pkg_lock from '../package-lock.json';
 const XSL_UNROLL =
   'https://raw.githubusercontent.com/infojunkie/musicxml-midi/main/build/unroll.sef.json';
 
-const SOUNDFONT_DEFAULT = 'data/GeneralUserGS.sf3';
+const DEBOUNCE_THROTTLE = 100;
 
 export type MeasureIndex = number;
 export type MillisecsTimestamp = number;
@@ -32,53 +33,83 @@ export enum PlayerState {
  */
 export interface PlayerOptions {
   /**
-   * The HTML element containing the sheet.
+   * The HTML element containing the sheet, as DOM element object or its id.
    */
   container: HTMLDivElement | string;
   /**
-   * The input MusicXML score, as text string or ArrayBuffer (for compressed MXL).
+   * The input MusicXML score, as text string or ArrayBuffer (e.g. for compressed MXL).
    */
   musicXml: ArrayBuffer | string;
   /**
-   * An instance of the sheet renderer used to render the score.
+   * An instance of ISheetRenderer interface used to render the score.
    */
   renderer: ISheetRenderer;
   /**
-   * An instance of the MIDI converter used to convert the score to MIDI.
+   * An instance of IMIDIConverter interface used to convert the score to MIDI.
    */
-  converter: IMidiConverter;
+  converter: IMIDIConverter;
   /**
-   * (Optional) An instance of the MIDI output to send the note events.
-   * If omitted, a local Web Audio synthesizer will be used.
+   * An instance of the MIDI output to send the note events.
+   * Optional, default: local Web Audio synthesizer
    */
-  output?: WebMidi.MIDIOutput;
+  output?: WebMidi.MIDIOutput | null;
   /**
-   * (Optional) Soundfond URL.
-   * If omitted, the default soundfont will be used.
+   * URL of soundfont for local Web Audio synthesizer.
+   * Optional, default: https://spessasus.github.io/SpessaSynth/soundfonts/GeneralUserGS.sf3
    */
   soundfontUri?: string;
   /**
-   * (Optional) A flag to unroll the score before displaying it and playing it.
+   * URL of MusicXML => Timemap XSL transformation.
+   * Optional, default: https://raw.githubusercontent.com/infojunkie/musicxml-midi/main/build/timemap.sef.json
+   * Note that the code expects to find the file unroll.xsl / unroll.sef.json at the same path.
+   */
+  timemapXslUri?: string;
+  /**
+   * A flag to unroll the score before displaying it and playing it.
+   * Optional, default: false
    */
   unroll?: boolean;
   /**
-   * (Optional) A flag to mute the player's MIDI output.
+   * A flag to mute the player's MIDI output.
+   * Optional, default: false
    * Can also be changed dynamically via Player.mute attribute.
    */
   mute?: boolean;
   /**
-   * (Optional) Repeat count. A value of Infinity means loop forever.
+   * Repeat count. A value of Infinity means loop forever.
+   * Optional, default: 1
    * Can also be changed dynamically via Player.repeat attribute.
    */
   repeat?: number;
   /**
-   * (Optional) Playback speed. A value of 1 means normal speed.
+   * Playback speed. A value of 1 means normal speed.
+   * Optional, default: 1
    * Can also be changed dynamically via Player.velocity attribute.
    */
   velocity?: number;
+  /**
+   * A flag to render the score as a single horizontal system.
+   * Optional, default: false
+   */
+  horizontal?: boolean;
+  /**
+   * A flag to center the browser window around the cursor.
+   * Optional, default: true
+   */
+  followCursor?: boolean;
 }
 
-const RESIZE_THROTTLE = 100;
+const DEFAULT_PLAYER_OPTIONS = {
+  soundfontUri: 'https://spessasus.github.io/SpessaSynth/soundfonts/GeneralUserGS.sf3',
+  timemapXslUri: 'https://raw.githubusercontent.com/infojunkie/musicxml-midi/main/build/timemap.sef.json',
+  output: null,
+  unroll: false,
+  mute: false,
+  repeat: 1,
+  velocity: 1,
+  horizontal: false,
+  followCursor: true,
+}
 
 export class Player {
   /**
@@ -88,7 +119,13 @@ export class Player {
    * @returns A new instance of the player, ready to play.
    * @throws Error exception with various error messages.
    */
-  static async create(options: PlayerOptions): Promise<Player> {
+  static async create(_options: PlayerOptions): Promise<Player> {
+    // Fill in the default option values.
+    const options: Required<PlayerOptions> = {
+      ...DEFAULT_PLAYER_OPTIONS,
+      ..._options,
+    };
+
     // Create the inner sheet element.
     const container =
       typeof options.container === 'string'
@@ -114,16 +151,17 @@ export class Player {
 
       // Create the synth element.
       const context = new AudioContext();
-      await context.audioWorklet.addModule('spessasynth_processor.min.js');
-      const soundfont = await (await fetish(options.soundfontUri ?? SOUNDFONT_DEFAULT)).arrayBuffer();
+      //await context.audioWorklet.addModule(new URL('helpers/spessasynth_processor.ts', import.meta.url));
+      await context.audioWorklet.addModule(new URL('spessasynth_processor.js', import.meta.url));
+      const soundfont = await (await fetish(options.soundfontUri)).arrayBuffer();
       const synth = new Synthetizer(context);
       synth.connect(context.destination);
       await synth.soundBankManager.addSoundBank(soundfont, "main");
 
       // Initialize the various objects.
       // It's too bad that constructors cannot be made async because that would simplify the code.
-      await options.converter.initialize(musicXml);
-      await options.renderer.initialize(sheet, musicXml);
+      await options.converter.initialize(musicXml, options);
+      await options.renderer.initialize(sheet, musicXml, options);
 
       // Finally, create the player instance.
       return new Player(options, sheet, parseResult, musicXml, synth, context);
@@ -138,9 +176,10 @@ export class Player {
   protected _observer: ResizeObserver;
   protected _duration: number;
   protected _state: PlayerState;
+  protected _abortController: AbortController;
 
   protected constructor(
-    protected _options: PlayerOptions,
+    protected _options: Required<PlayerOptions>,
     protected _sheet: HTMLElement,
     protected _parseResult: MusicXmlParseResult,
     protected _musicXml: string,
@@ -158,23 +197,22 @@ export class Player {
     if (this._options.output) {
       this._sequencer.connectMIDIOutput(this._options.output);
     }
-    this._sequencer.loadNewSongList([this._midi]);
+    this._sequencer.loadNewSongList([{ binary: this._midi.writeMIDI() }]);
 
     // Initialize the playback options.
-    this.mute = this._options.mute ?? false;
-    this._sequencer.playbackRate = this._options.velocity ?? 1;
-    this._sequencer.loopCount = this._options.repeat ?? 1;
+    this.mute = this._options.mute;
+    this._sequencer.playbackRate = this._options.velocity;
+    this._sequencer.loopCount = this._options.repeat;
 
-    // Set up resize handling.
-    // Throttle the resize event https://stackoverflow.com/a/5490021/209184
-    let timeout: number | undefined = undefined;
-    this._observer = new ResizeObserver(() => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        this._options.renderer.resize();
-      }, RESIZE_THROTTLE);
-    });
+    // Handling DOM events.
+    this._observer = new ResizeObserver(debounce(() => {
+      this._options.renderer.onResize();
+    }, DEBOUNCE_THROTTLE));
     this._observer.observe(this._sheet);
+    this._abortController = new AbortController();
+    window.addEventListener('scroll', debounce((event) => {
+      this._options.renderer.onEvent('scroll', event);
+    }, 0), { signal: this._abortController.signal });
   }
 
   /**
@@ -187,6 +225,7 @@ export class Player {
       this._observer?.disconnect();
       this._sequencer?.pause();
       this._options?.renderer?.destroy();
+      this._abortController?.abort();
     } catch (error) {
       console.error(`[Player.destroy] ${error}`);
     }
@@ -329,7 +368,6 @@ export class Player {
 
   /**
    * The duration of the score/MIDI file (ms).
-   * Precomputed in the constructor.
    */
   get duration(): number {
     return this._duration;
@@ -405,20 +443,14 @@ export class Player {
    *
    * @see https://github.com/spessasus/SpessaSynth/discussions/176
    */
-  protected static _adjustMidiDuration(converter: IMidiConverter): BasicMIDI {
+  protected static _adjustMidiDuration(converter: IMIDIConverter): BasicMIDI {
     const midi = BasicMIDI.fromArrayBuffer(converter.midi);
     const duration = converter.timemap.reduce((duration, entry) => duration + entry.duration, 0);
     const ticks = Math.round(duration / (60000 / midi.tempoChanges[0].tempo / midi.timeDivision));
-    midi.tracks[0].deleteEvent(-1);
     midi.tracks[0].pushEvent({
       ticks,
       statusByte: midiMessageTypes.controllerChange,
       data: new Uint8Array([50, 0]),
-    });
-    midi.tracks[0].pushEvent({
-      ticks,
-      statusByte: midiMessageTypes.endOfTrack,
-      data: new Uint8Array(),
     });
     midi.flush();
     return midi;

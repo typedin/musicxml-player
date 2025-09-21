@@ -1,12 +1,12 @@
-import type { IMidiConverter, MeasureTimemap } from './IMidiConverter';
-import { FetchConverter } from './FetchConverter';
-import { assertIsDefined, fetish } from './helpers';
+import type { IMIDIConverter, MeasureTimemap } from './IMIDIConverter';
+import { assertIsDefined, fetish, parseMusicXmlTimemap } from './helpers';
+import { PlayerOptions } from './Player';
 
 /**
- * Implementation of IMidiConverter that queries the musicxml-midi API (@see https://github.com/infojunkie/musicxml-midi)
+ * Implementation of IMIDIConverter that queries the musicxml-midi API (@see https://github.com/infojunkie/musicxml-midi)
  * to convert a MusicXML to a MIDI file. It extracts the timemap contained within the MIDI file, expressed as MIDI marker events.
  */
-export class MmaConverter implements IMidiConverter {
+export class MmaConverter implements IMIDIConverter {
   protected _version?: {
     name: string;
     version: string;
@@ -22,7 +22,7 @@ export class MmaConverter implements IMidiConverter {
     this._uri = uri.endsWith('/') ? uri.slice(0, -1) : uri;
   }
 
-  async initialize(musicXml: string): Promise<void> {
+  async initialize(musicXml: string, options: Required<PlayerOptions>): Promise<void> {
     // First get the API version.
     this._version = await (await fetish(`${this._uri}/`)).json();
 
@@ -39,7 +39,7 @@ export class MmaConverter implements IMidiConverter {
       body: formData,
     });
     this._midi = await response.arrayBuffer();
-    this._timemap = await FetchConverter.parseTimemap(musicXml);
+    this._timemap = await parseMusicXmlTimemap(musicXml, options.timemapXslUri);
   }
 
   get midi(): ArrayBuffer {
@@ -53,6 +53,6 @@ export class MmaConverter implements IMidiConverter {
   }
 
   get version(): string {
-    return `MmaConverter v${this._version?.version ?? 'Unknown'}`;
+    return `${this._version?.name ?? 'musicxml-midi'} v${this._version?.version ?? 'Unknown'}`;
   }
 }

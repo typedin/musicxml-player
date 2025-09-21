@@ -1,15 +1,16 @@
-import type { IMidiConverter, MeasureTimemap } from './IMidiConverter';
-import { TimeMapEntryFixed, VerovioBase } from './VerovioBase';
-import { assertIsDefined, fetish } from './helpers';
-import { FetchConverter } from './FetchConverter';
+import type { IMIDIConverter, MeasureTimemap } from './IMIDIConverter';
+import type { TimeMapEntryFixed } from './VerovioTypes';
+import { VerovioConverterBase } from './VerovioConverterBase';
+import { assertIsDefined, fetish, parseMusicXmlTimemap } from './helpers';
 import pkg from '../package.json';
+import { PlayerOptions } from './Player';
 
 /**
- * Implementation of IMidiConverter that uses statically-rendered Verovio assets:
+ * Implementation of IMIDIConverter that uses statically-rendered Verovio assets:
  * - MIDI file as obtained by `verovio --xml-id-checksum -t midi /path/to/score.musicxml`
  * - Timemap JSON file as obtained by `verovio --xml-id-checksum -t timemap --timemap-options '{ "includeMeasures": true, "includeRests": true }' /path/to/score.musicxml`
  */
-export class VerovioStaticConverter extends VerovioBase implements IMidiConverter {
+export class VerovioStaticConverter extends VerovioConverterBase implements IMIDIConverter {
   protected _timemap?: MeasureTimemap;
   protected _midi?: ArrayBuffer;
 
@@ -20,17 +21,17 @@ export class VerovioStaticConverter extends VerovioBase implements IMidiConverte
     super();
   }
 
-  async initialize(musicXml: string) {
+  async initialize(musicXml: string, options: Required<PlayerOptions>) {
     this._midi =
       typeof this._midiOrUri === 'string'
         ? await (await fetish(this._midiOrUri)).arrayBuffer()
         : this._midiOrUri;
     this._timemap =
       typeof this._timemapOrUri === 'undefined'
-        ? await FetchConverter.parseTimemap(musicXml)
+        ? await parseMusicXmlTimemap(musicXml, options.timemapXslUri)
         : typeof this._timemapOrUri === 'string'
-          ? VerovioBase._parseTimemap(await (await fetish(this._timemapOrUri)).json())
-          : VerovioBase._parseTimemap(this._timemapOrUri);
+          ? VerovioConverterBase._parseTimemap(await (await fetish(this._timemapOrUri)).json())
+          : VerovioConverterBase._parseTimemap(this._timemapOrUri);
   }
 
   get midi(): ArrayBuffer {
@@ -44,6 +45,6 @@ export class VerovioStaticConverter extends VerovioBase implements IMidiConverte
   }
 
   get version(): string {
-    return `${pkg.name} v${pkg.version}`;
+    return `${pkg.name}/VerovioStaticConverter v${pkg.version}`;
   }
 }

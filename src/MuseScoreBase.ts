@@ -1,4 +1,4 @@
-import type { MeasureTimemap } from './IMidiConverter';
+import type { MeasureTimemap } from './IMIDIConverter';
 import { atoab, fetish } from './helpers';
 import SaxonJS from './saxon-js/SaxonJS3.rt';
 
@@ -122,9 +122,5 @@ export class MuseScoreBase {
     // Compute last measure duration by getting total duration minus last measure onset.
     this._timemap.last().duration =
       this._mscore.metadata.duration * 1000 - this._timemap.last().timestamp;
-  }
-
-  get version(): string {
-    return `mscore v${this._mscore?.devinfo.version ?? 'Unknown'}`;
   }
 }

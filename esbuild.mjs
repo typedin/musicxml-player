@@ -1,18 +1,19 @@
 import { nodeModulesPolyfillPlugin } from 'esbuild-plugins-node-modules-polyfill';
 import { build } from 'esbuild';
 import process from 'process';
+import metaUrlPlugin from "@chialab/esbuild-plugin-meta-url";
 
 // https://stackoverflow.com/a/69409483/209184
 const argv = key => {
   // Return true if the key exists and a value is undefined
-  if ( process.argv.includes( `--${ key }` ) ) return true;
+  if (process.argv.includes(`--${ key }`)) return true;
 
-  const value = process.argv.find( element => element.startsWith( `--${ key }=` ) );
+  const value = process.argv.find(element => element.startsWith(`--${ key }=`));
 
   // Return null if the key does not exist and a value is undefined
-  if ( !value ) return null;
+  if (!value) return null;
 
-  return value.replace( `--${ key }=` , '' );
+  return value.replace(`--${ key }=` , '');
 }
 
 const targets = {
@@ -31,9 +32,11 @@ const targets = {
 const format = argv('format') ?? 'esm';
 build({
   entryPoints: ['src/index.ts'],
-  plugins: [nodeModulesPolyfillPlugin()],
+  plugins: [nodeModulesPolyfillPlugin(), /*metaUrlPlugin({
+    emit: format === 'esm'
+  })*/],
   bundle: true,
   minify: true,
   sourcemap: true,
   ...targets[format]
-});
+})

@@ -1,4 +1,9 @@
-import type { MeasureIndex, MillisecsTimestamp, Player } from './Player';
+import type {
+  MeasureIndex,
+  MillisecsTimestamp,
+  PlayerOptions,
+  Player
+} from './Player';
 
 /**
  * Interface to a MusicXML sheet renderer.
@@ -11,13 +16,17 @@ import type { MeasureIndex, MillisecsTimestamp, Player } from './Player';
 export interface ISheetRenderer {
   player?: Player;
   destroy(): void;
-  initialize(container: HTMLElement, musicXml: string): Promise<void>;
+  initialize(container: HTMLElement, musicXml: string, options: Required<PlayerOptions>): Promise<void>;
   moveTo(
     index: MeasureIndex,
     start: MillisecsTimestamp,
     offset: MillisecsTimestamp,
     duration?: MillisecsTimestamp,
   ): void;
-  resize(): void;
+  onResize(): void;
+  onEvent(
+    type: keyof GlobalEventHandlersEventMap,
+    event: Event
+  ): void;
   get version(): string;
 }
