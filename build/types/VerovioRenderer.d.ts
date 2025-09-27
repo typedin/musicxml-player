@@ -1,5 +1,5 @@
 import type { ISheetRenderer } from './ISheetRenderer';
-import { type MeasureIndex, type MillisecsTimestamp, type PlayerOptions } from './Player';
+import type { MeasureIndex, MillisecsTimestamp, PlayerOptions } from './Player';
 import { VerovioRendererBase } from './VerovioRendererBase';
 import { VerovioOptionsFixed, VerovioToolkitFixed } from './VerovioTypes';
 /**

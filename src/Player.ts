@@ -4,18 +4,15 @@ import { midiMessageTypes } from 'spessasynth_core';
 import {
   binarySearch,
   parseMusicXml,
+  unrollMusicXml,
   MusicXmlParseResult,
   fetish,
   debounce
 } from './helpers';
 import type { IMIDIConverter } from './IMIDIConverter';
 import type { ISheetRenderer } from './ISheetRenderer';
-import SaxonJS from './saxon-js/SaxonJS3.rt';
 import pkg from '../package.json';
 import pkg_lock from '../package-lock.json';
-
-const XSL_UNROLL =
-  'https://raw.githubusercontent.com/infojunkie/musicxml-midi/main/build/unroll.sef.json';
 
 const DEBOUNCE_THROTTLE = 100;
 
@@ -59,6 +56,11 @@ export interface PlayerOptions {
    */
   soundfontUri?: string;
   /**
+   * URL of MusicXML unrolling transformation.
+   * Optional, default: https://raw.githubusercontent.com/infojunkie/musicxml-midi/main/build/unroll.sef.json
+   */
+  unrollXslUri?: string;
+  /**
    * URL of MusicXML => Timemap XSL transformation.
    * Optional, default: https://raw.githubusercontent.com/infojunkie/musicxml-midi/main/build/timemap.sef.json
    * Note that the code expects to find the file unroll.xsl / unroll.sef.json at the same path.
@@ -101,6 +103,7 @@ export interface PlayerOptions {
 
 const DEFAULT_PLAYER_OPTIONS = {
   soundfontUri: 'https://spessasus.github.io/SpessaSynth/soundfonts/GeneralUserGS.sf3',
+  unrollXslUri: 'https://raw.githubusercontent.com/infojunkie/musicxml-midi/main/build/unroll.sef.json',
   timemapXslUri: 'https://raw.githubusercontent.com/infojunkie/musicxml-midi/main/build/timemap.sef.json',
   output: null,
   unroll: false,
@@ -146,7 +149,7 @@ export class Player {
       });
       let musicXml = parseResult.musicXml;
       if (options.unroll) {
-        musicXml = await Player._unrollMusicXml(musicXml);
+        musicXml = await unrollMusicXml(musicXml, options.unrollXslUri);
       }
 
       // Create the synth element.
@@ -411,29 +414,6 @@ export class Player {
    */
   set output(output: WebMidi.MIDIOutput | undefined) {
     this._sequencer.connectMIDIOutput(output);
-  }
-
-  /**
-   * Unroll the score by expanding all repeats and jumps into a linear score.
-   */
-  protected static async _unrollMusicXml(musicXml: string): Promise<string> {
-    try {
-      const unroll = await SaxonJS.transform(
-        {
-          stylesheetLocation: XSL_UNROLL,
-          sourceText: musicXml,
-          destination: 'serialized',
-          stylesheetParams: {
-            renumberMeasures: true,
-          },
-        },
-        'async',
-      );
-      return unroll.principalResult;
-    } catch (error) {
-      console.error(`[Player._unrollMusicXml] ${error}`);
-    }
-    return musicXml;
   }
 
   /**

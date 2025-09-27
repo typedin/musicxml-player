@@ -42,6 +42,11 @@ export interface PlayerOptions {
      */
     soundfontUri?: string;
     /**
+     * URL of MusicXML unrolling transformation.
+     * Optional, default: https://raw.githubusercontent.com/infojunkie/musicxml-midi/main/build/unroll.sef.json
+     */
+    unrollXslUri?: string;
+    /**
      * URL of MusicXML => Timemap XSL transformation.
      * Optional, default: https://raw.githubusercontent.com/infojunkie/musicxml-midi/main/build/timemap.sef.json
      * Note that the code expects to find the file unroll.xsl / unroll.sef.json at the same path.
@@ -171,10 +176,6 @@ export declare class Player {
      * MIDI output. A value of undefined means internal synth.
      */
     set output(output: WebMidi.MIDIOutput | undefined);
-    /**
-     * Unroll the score by expanding all repeats and jumps into a linear score.
-     */
-    protected static _unrollMusicXml(musicXml: string): Promise<string>;
     /**
      * Adjust the incoming MIDI file by inserting a no-op CC message at the end of the last measure
      * based on the durations reported by the timemap. This forces the MIDI player to end on the
