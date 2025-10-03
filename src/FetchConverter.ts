@@ -2,6 +2,8 @@ import type { IMIDIConverter, MeasureTimemap } from './IMIDIConverter';
 import { assertIsDefined, fetish, parseMusicXmlTimemap } from './helpers';
 import pkg from '../package.json';
 import { PlayerOptions } from './Player';
+import type { IXSLTProcessor } from './interfaces/IXSLTProcessor';
+import { SaxonJSAdapter } from './adapters/SaxonJSAdapter';
 
 /**
  * Implementation of IMIDIConverter that simply fetches given MIDI file and timemap JSON file URIs.
@@ -15,11 +17,15 @@ import { PlayerOptions } from './Player';
 export class FetchConverter implements IMIDIConverter {
   protected _timemap?: MeasureTimemap;
   protected _midi?: ArrayBuffer;
+  protected _xsltProcessor: IXSLTProcessor;
 
   constructor(
     protected _midiOrUri: ArrayBuffer | string,
     protected _timemapOrUri?: MeasureTimemap | string,
-  ) {}
+    xsltProcessor?: IXSLTProcessor,
+  ) {
+    this._xsltProcessor = xsltProcessor || new SaxonJSAdapter();
+  }
 
   async initialize(musicXml: string, options: Required<PlayerOptions>): Promise<void> {
     this._midi =
@@ -28,7 +34,7 @@ export class FetchConverter implements IMIDIConverter {
         : this._midiOrUri;
     this._timemap =
       typeof this._timemapOrUri === 'undefined'
-        ? await parseMusicXmlTimemap(musicXml, options.timemapXslUri)
+        ? await parseMusicXmlTimemap(musicXml, options.timemapXslUri, this._xsltProcessor)
         : typeof this._timemapOrUri === 'string'
           ? <MeasureTimemap>await (await fetish(this._timemapOrUri)).json()
           : this._timemapOrUri;

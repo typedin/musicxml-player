@@ -4,6 +4,8 @@ import { VerovioConverterBase } from './VerovioConverterBase';
 import { assertIsDefined, fetish, parseMusicXmlTimemap } from './helpers';
 import pkg from '../package.json';
 import { PlayerOptions } from './Player';
+import type { IXSLTProcessor } from './interfaces/IXSLTProcessor';
+import { SaxonJSAdapter } from './adapters/SaxonJSAdapter';
 
 /**
  * Implementation of IMIDIConverter that uses statically-rendered Verovio assets:
@@ -13,12 +15,15 @@ import { PlayerOptions } from './Player';
 export class VerovioStaticConverter extends VerovioConverterBase implements IMIDIConverter {
   protected _timemap?: MeasureTimemap;
   protected _midi?: ArrayBuffer;
+  protected _xsltProcessor: IXSLTProcessor;
 
   constructor(
     protected _midiOrUri: ArrayBuffer | string,
     protected _timemapOrUri?: TimeMapEntryFixed[] | string,
+    xsltProcessor?: IXSLTProcessor,
   ) {
     super();
+    this._xsltProcessor = xsltProcessor || new SaxonJSAdapter();
   }
 
   async initialize(musicXml: string, options: Required<PlayerOptions>) {
@@ -28,7 +33,7 @@ export class VerovioStaticConverter extends VerovioConverterBase implements IMID
         : this._midiOrUri;
     this._timemap =
       typeof this._timemapOrUri === 'undefined'
-        ? await parseMusicXmlTimemap(musicXml, options.timemapXslUri)
+        ? await parseMusicXmlTimemap(musicXml, options.timemapXslUri, this._xsltProcessor)
         : typeof this._timemapOrUri === 'string'
           ? VerovioConverterBase._parseTimemap(await (await fetish(this._timemapOrUri)).json())
           : VerovioConverterBase._parseTimemap(this._timemapOrUri);

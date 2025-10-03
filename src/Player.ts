@@ -11,6 +11,8 @@ import {
 } from './helpers';
 import type { IMIDIConverter } from './IMIDIConverter';
 import type { ISheetRenderer } from './ISheetRenderer';
+import type { IXSLTProcessor } from './interfaces/IXSLTProcessor';
+import { SaxonJSAdapter } from './adapters/SaxonJSAdapter';
 import pkg from '../package.json';
 import pkg_lock from '../package-lock.json';
 
@@ -99,6 +101,11 @@ export interface PlayerOptions {
    * Optional, default: true
    */
   followCursor?: boolean;
+  /**
+   * XSLT processor instance for XML processing.
+   * Optional, default: new SaxonJSAdapter()
+   */
+  xsltProcessor?: IXSLTProcessor;
 }
 
 const DEFAULT_PLAYER_OPTIONS = {
@@ -112,6 +119,7 @@ const DEFAULT_PLAYER_OPTIONS = {
   velocity: 1,
   horizontal: false,
   followCursor: true,
+  xsltProcessor: new SaxonJSAdapter(),
 }
 
 export class Player {
@@ -146,10 +154,10 @@ export class Player {
       const parseResult = await parseMusicXml(options.musicXml, {
         title: '//work/work-title/text()',
         version: '//score-partwise/@version',
-      });
+      }, options.xsltProcessor);
       let musicXml = parseResult.musicXml;
       if (options.unroll) {
-        musicXml = await unrollMusicXml(musicXml, options.unrollXslUri);
+        musicXml = await unrollMusicXml(musicXml, options.unrollXslUri, options.xsltProcessor);
       }
 
       // Create the synth element.
@@ -292,7 +300,7 @@ export class Player {
       // Update the cursors and listeners.
       const entry =
         this._options.converter.timemap[
-          index >= 0 ? index : Math.max(0, -index - 2)
+        index >= 0 ? index : Math.max(0, -index - 2)
         ];
       this._options.renderer.moveTo(
         entry.measure,
@@ -397,7 +405,7 @@ export class Player {
    * A flag to mute the player's MIDI output.
    */
   set mute(value: boolean) {
-    for (let i=0; i<this._synthesizer.channelsAmount; i++) {
+    for (let i = 0; i < this._synthesizer.channelsAmount; i++) {
       this._synthesizer.muteChannel(i, value);
     }
   }
