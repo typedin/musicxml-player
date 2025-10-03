@@ -1,6 +1,10 @@
 import type { IMIDIConverter, MeasureTimemap } from './IMIDIConverter';
 import { MuseScoreDownloader, MuseScoreBase } from './MuseScoreBase';
 import { IXSLTProcessor } from './interfaces/IXSLTProcessor';
+<<<<<<< HEAD
+=======
+
+>>>>>>> cf0517e (Re-add soundfont)
 /**
  * Implementation of IMIDIConverter that uses MuseScore to generate the MIDI and timemap structures.
  */
