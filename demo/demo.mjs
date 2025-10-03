@@ -330,8 +330,12 @@ function populateSheets(ireal) {
 
 async function handleSampleSelect(e) {
   if (!e.target.value) return;
-  const sheet = e.target.value;
-  const option = document.querySelector(`#samples option[value="${sheet}"]`);
+  let sheet = e.target.value;
+  let option = document.querySelector(`#samples option[value="${sheet}"]`);
+  if (!option) {
+    sheet = DEFAULT_SHEET;
+    option = document.querySelector(`#samples option[value="${sheet}"]`);
+  }
   document.getElementById('sheets').textContent = '';
   try {
     g_state.params.set('renderer', option.getAttribute('data-renderer'));
