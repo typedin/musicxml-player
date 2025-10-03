@@ -146,7 +146,7 @@ async function createPlayer() {
         velocity: Number(velocity),
         horizontal: options.horizontal,
         followCursor: options.follow,
-        //soundfontUri: 'data/GeneralUserGS.sf3',
+        soundfontUri: 'data/GeneralUserGS.sf3',
         //timemapXslUri: 'data/timemap.sef.json',
       });
 

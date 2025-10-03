@@ -35,4 +35,5 @@ pnpmfile.js
 # Project-specific
 *.sf2
 *.sf3
+!GeneralUserGS.sf3
 *.sef.json
