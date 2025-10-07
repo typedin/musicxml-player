@@ -4,10 +4,6 @@ import { SaxonJSAdapter } from '../adapters/SaxonJSAdapter'
 
 describe('unrollMusicXml', () => {
   const xsltProcessor = new SaxonJSAdapter();
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 8bee09f (extracted an interface for XSLT processing)
   
   // Inline XSLT for testing (since SaxonJS needs to be able to fetch the files)
   const testXslContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -77,12 +73,6 @@ describe('unrollMusicXml', () => {
     </xsl:copy>
   </xsl:template>
 </xsl:stylesheet>`
-  
-<<<<<<< HEAD
-=======
->>>>>>> cf0517e (Re-add soundfont)
-=======
->>>>>>> 8bee09f (extracted an interface for XSLT processing)
   const simpleMusicXml = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE score-partwise PUBLIC
     "-//Recordare//DTD MusicXML 4.0 Partwise//EN"
@@ -120,11 +110,6 @@ describe('unrollMusicXml', () => {
     </measure>
   </part>
 </score-partwise>`
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 8bee09f (extracted an interface for XSLT processing)
   const musicXmlWithRepeats = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE score-partwise PUBLIC
     "-//Recordare//DTD MusicXML 4.0 Partwise//EN"
@@ -253,7 +238,6 @@ describe('unrollMusicXml', () => {
       const result = await unrollMusicXml(musicXmlWithRepeats, 'repeat-processor.xsl', mockProcessor)
       expect(result).toBe('repeats expanded')
     })
-<<<<<<< HEAD
   })
 
   // ERROR HANDLING TESTS
@@ -319,12 +303,6 @@ describe('unrollMusicXml', () => {
       results.forEach(result => {
         expect(result.status).toBe('fulfilled')
       })
-=======
-  // Contract tests - test the interface, not SaxonJS internals
-  it('should be a function', () => {
-    expect(typeof unrollMusicXml).toBe('function')
-=======
->>>>>>> 8bee09f (extracted an interface for XSLT processing)
   })
 
   // ERROR HANDLING TESTS
@@ -378,13 +356,6 @@ describe('unrollMusicXml', () => {
         unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor)
       ]
 
-<<<<<<< HEAD
-    // All promises should settle (either fulfilled or rejected)
-    expect(results).toHaveLength(4)
-    results.forEach(result => {
-      expect(result.status).toMatch(/fulfilled|rejected/)
->>>>>>> cf0517e (Re-add soundfont)
-=======
       const results = await Promise.allSettled(promises)
 
       // All promises should settle (either fulfilled or rejected)
@@ -397,7 +368,6 @@ describe('unrollMusicXml', () => {
       results.forEach(result => {
         expect(result.status).toBe('fulfilled')
       })
->>>>>>> 8bee09f (extracted an interface for XSLT processing)
     })
   })
 })
