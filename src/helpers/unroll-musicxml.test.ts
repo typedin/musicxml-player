@@ -5,6 +5,9 @@ import { SaxonJSAdapter } from '../adapters/SaxonJSAdapter'
 describe('unrollMusicXml', () => {
   const xsltProcessor = new SaxonJSAdapter();
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 8bee09f (extracted an interface for XSLT processing)
   
   // Inline XSLT for testing (since SaxonJS needs to be able to fetch the files)
   const testXslContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -75,8 +78,11 @@ describe('unrollMusicXml', () => {
   </xsl:template>
 </xsl:stylesheet>`
   
+<<<<<<< HEAD
 =======
 >>>>>>> cf0517e (Re-add soundfont)
+=======
+>>>>>>> 8bee09f (extracted an interface for XSLT processing)
   const simpleMusicXml = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE score-partwise PUBLIC
     "-//Recordare//DTD MusicXML 4.0 Partwise//EN"
@@ -116,6 +122,9 @@ describe('unrollMusicXml', () => {
 </score-partwise>`
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 8bee09f (extracted an interface for XSLT processing)
   const musicXmlWithRepeats = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE score-partwise PUBLIC
     "-//Recordare//DTD MusicXML 4.0 Partwise//EN"
@@ -244,6 +253,7 @@ describe('unrollMusicXml', () => {
       const result = await unrollMusicXml(musicXmlWithRepeats, 'repeat-processor.xsl', mockProcessor)
       expect(result).toBe('repeats expanded')
     })
+<<<<<<< HEAD
   })
 
   // ERROR HANDLING TESTS
@@ -313,59 +323,81 @@ describe('unrollMusicXml', () => {
   // Contract tests - test the interface, not SaxonJS internals
   it('should be a function', () => {
     expect(typeof unrollMusicXml).toBe('function')
+=======
+>>>>>>> 8bee09f (extracted an interface for XSLT processing)
   })
 
-  it('should return a Promise', () => {
-    const result = unrollMusicXml('test', 'test.xsl', xsltProcessor)
-    expect(result).toBeInstanceOf(Promise)
-  })
+  // ERROR HANDLING TESTS
+  describe('Error Handling', () => {
+    it('should handle missing XSLT file gracefully', async () => {
+      const result = await unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor)
+      expect(result).toBe(simpleMusicXml) // Should return original on error
+    })
 
-  it('should accept string parameters', async () => {
-    // Test that the function signature is correct
-    // We don't care about SaxonJS internals, just the interface
-    try {
-      const result = await unrollMusicXml(simpleMusicXml, 'test-unroll.xsl', xsltProcessor)
-      // Should return original MusicXML when XSLT file is not found
-      expect(result).toBe(simpleMusicXml)
-    } catch (error) {
-      // Expected to fail without proper SaxonJS setup, but interface is correct
-      expect(error).toBeInstanceOf(Error)
-    }
-  })
+    it('should handle XSLT transformation errors gracefully', async () => {
+      const result = await unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor)
+      
+      expect(result).toBeDefined()
+      expect(result).toBe(simpleMusicXml) // Should return original on error
+    })
 
-  it('should handle missing XSLT file gracefully', async () => {
-    // This tests the error handling contract
-    const result = await unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor)
-    expect(result).toBe(simpleMusicXml) // Should return original on error
-  })
+    it('should handle MusicXML with repeats when XSLT fails', async () => {
+      const result = await unrollMusicXml(musicXmlWithRepeats, 'nonexistent.xsl', xsltProcessor)
+      
+      expect(result).toBeDefined()
+      expect(result).toBe(musicXmlWithRepeats) // Should return original on error
+    })
 
-  it('should handle empty input gracefully', async () => {
-    const result = await unrollMusicXml('', 'test-unroll.xsl', xsltProcessor)
-    expect(result).toBe('')
-  })
+    it('should preserve measure structure when transformation fails', async () => {
+      const result = await unrollMusicXml(musicXmlWithRepeats, 'nonexistent.xsl', xsltProcessor)
+      
+      // Count measures in original and result
+      const originalMeasureCount = (musicXmlWithRepeats.match(/<measure/g) || []).length
+      const resultMeasureCount = (result.match(/<measure/g) || []).length
+      
+      expect(resultMeasureCount).toBe(originalMeasureCount) // Should be same when transformation fails
+    })
 
-  it('should handle malformed XML gracefully', async () => {
-    const invalidXml = '<invalid-xml>'
-    const result = await unrollMusicXml(invalidXml, 'test-unroll.xsl', xsltProcessor)
-    expect(result).toBe(invalidXml) // Should return original on error
-  })
+    it('should handle empty input gracefully', async () => {
+      const result = await unrollMusicXml('', 'nonexistent.xsl', xsltProcessor)
+      expect(result).toBe('')
+    })
 
-  // Test that all async operations complete properly
-  it('should handle all async operations without unhandled rejections', async () => {
-    const promises = [
-      unrollMusicXml(simpleMusicXml, 'test-unroll.xsl', xsltProcessor),
-      unrollMusicXml('', 'test-unroll.xsl', xsltProcessor),
-      unrollMusicXml('<invalid-xml>', 'test-unroll.xsl', xsltProcessor),
-      unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor)
-    ]
+    it('should handle malformed XML gracefully', async () => {
+      const invalidXml = '<invalid-xml>'
+      const result = await unrollMusicXml(invalidXml, 'nonexistent.xsl', xsltProcessor)
+      expect(result).toBe(invalidXml) // Should return original on error
+    })
 
-    const results = await Promise.allSettled(promises)
+    it('should complete all async operations without unhandled rejections', async () => {
+      const promises = [
+        unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor),
+        unrollMusicXml(musicXmlWithRepeats, 'nonexistent.xsl', xsltProcessor),
+        unrollMusicXml('', 'nonexistent.xsl', xsltProcessor),
+        unrollMusicXml('<invalid-xml>', 'nonexistent.xsl', xsltProcessor),
+        unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor)
+      ]
 
+<<<<<<< HEAD
     // All promises should settle (either fulfilled or rejected)
     expect(results).toHaveLength(4)
     results.forEach(result => {
       expect(result.status).toMatch(/fulfilled|rejected/)
 >>>>>>> cf0517e (Re-add soundfont)
+=======
+      const results = await Promise.allSettled(promises)
+
+      // All promises should settle (either fulfilled or rejected)
+      expect(results).toHaveLength(5)
+      results.forEach(result => {
+        expect(result.status).toMatch(/fulfilled|rejected/)
+      })
+      
+      // All should succeed (graceful error handling)
+      results.forEach(result => {
+        expect(result.status).toBe('fulfilled')
+      })
+>>>>>>> 8bee09f (extracted an interface for XSLT processing)
     })
   })
 })
