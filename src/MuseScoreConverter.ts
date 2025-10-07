@@ -17,7 +17,7 @@ export class MuseScoreConverter
   }
 
   async initialize(musicXml: string): Promise<void> {
-    return this.extract(musicXml);
+    return this._extract(musicXml);
   }
 
   get midi(): ArrayBuffer {

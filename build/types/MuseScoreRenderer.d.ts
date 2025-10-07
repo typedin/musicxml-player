@@ -1,6 +1,7 @@
 import type { ISheetRenderer } from './ISheetRenderer';
 import { MuseScoreDownloader, MuseScoreBase } from './MuseScoreBase';
 import type { MeasureIndex, MillisecsTimestamp, Player } from './Player';
+import { Cursor } from './Cursor';
 type MuseScorePosition = {
     x: number;
     y: number;
@@ -15,7 +16,8 @@ type MuseScorePosition = {
  */
 export declare class MuseScoreRenderer extends MuseScoreBase implements ISheetRenderer {
     player?: Player;
-    protected _cursor: HTMLDivElement;
+    protected _cursor: Cursor;
+    protected _container?: HTMLElement;
     protected _measures?: MuseScorePosition[];
     protected _segments?: (MuseScorePosition & {
         timestamp: MillisecsTimestamp;
