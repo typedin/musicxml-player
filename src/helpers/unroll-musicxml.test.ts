@@ -4,19 +4,19 @@ import { SaxonJSAdapter } from '../adapters/SaxonJSAdapter'
 
 describe('unrollMusicXml', () => {
   const xsltProcessor = new SaxonJSAdapter();
-  
+
   // Inline XSLT for testing (since SaxonJS needs to be able to fetch the files)
   const testXslContent = `<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:output method="xml" indent="yes"/>
-  
+
   <!-- Simple test XSLT that adds a comment to indicate processing -->
   <xsl:template match="@*|node()">
     <xsl:copy>
       <xsl:apply-templates select="@*|node()"/>
     </xsl:copy>
   </xsl:template>
-  
+
   <!-- Add a comment at the beginning to show the transformation worked -->
   <xsl:template match="/*">
     <xsl:copy>
@@ -29,23 +29,23 @@ describe('unrollMusicXml', () => {
   const testRepeatXslContent = `<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:output method="xml" indent="yes"/>
-  
+
   <!-- Parameter to control measure renumbering -->
   <xsl:param name="renumberMeasures" select="false"/>
-  
+
   <!-- Copy everything by default -->
   <xsl:template match="@*|node()">
     <xsl:copy>
       <xsl:apply-templates select="@*|node()"/>
     </xsl:copy>
   </xsl:template>
-  
+
   <!-- Handle repeats by expanding them -->
   <xsl:template match="repeat">
     <!-- For testing, we'll just remove repeat elements and add a comment -->
     <xsl:comment>Repeat expanded</xsl:comment>
   </xsl:template>
-  
+
   <!-- Handle measure renumbering -->
   <xsl:template match="measure">
     <xsl:copy>
@@ -64,7 +64,7 @@ describe('unrollMusicXml', () => {
       <xsl:apply-templates select="node()"/>
     </xsl:copy>
   </xsl:template>
-  
+
   <!-- Add transformation marker -->
   <xsl:template match="/*">
     <xsl:copy>
@@ -193,7 +193,7 @@ describe('unrollMusicXml', () => {
           expect(options.destination).toBe('serialized')
           expect(options.stylesheetParams.renumberMeasures).toBe(true)
           expect(mode).toBe('async')
-          
+
           return { principalResult: 'transformed result' }
         }
       } as any
@@ -249,25 +249,25 @@ describe('unrollMusicXml', () => {
 
     it('should handle XSLT transformation errors gracefully', async () => {
       const result = await unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor)
-      
+
       expect(result).toBeDefined()
       expect(result).toBe(simpleMusicXml) // Should return original on error
     })
 
     it('should handle MusicXML with repeats when XSLT fails', async () => {
       const result = await unrollMusicXml(musicXmlWithRepeats, 'nonexistent.xsl', xsltProcessor)
-      
+
       expect(result).toBeDefined()
       expect(result).toBe(musicXmlWithRepeats) // Should return original on error
     })
 
     it('should preserve measure structure when transformation fails', async () => {
       const result = await unrollMusicXml(musicXmlWithRepeats, 'nonexistent.xsl', xsltProcessor)
-      
+
       // Count measures in original and result
       const originalMeasureCount = (musicXmlWithRepeats.match(/<measure/g) || []).length
       const resultMeasureCount = (result.match(/<measure/g) || []).length
-      
+
       expect(resultMeasureCount).toBe(originalMeasureCount) // Should be same when transformation fails
     })
 
@@ -298,75 +298,76 @@ describe('unrollMusicXml', () => {
       results.forEach(result => {
         expect(result.status).toMatch(/fulfilled|rejected/)
       })
-      
+
       // All should succeed (graceful error handling)
       results.forEach(result => {
         expect(result.status).toBe('fulfilled')
       })
-  })
-
-  // ERROR HANDLING TESTS
-  describe('Error Handling', () => {
-    it('should handle missing XSLT file gracefully', async () => {
-      const result = await unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor)
-      expect(result).toBe(simpleMusicXml) // Should return original on error
     })
 
-    it('should handle XSLT transformation errors gracefully', async () => {
-      const result = await unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor)
-      
-      expect(result).toBeDefined()
-      expect(result).toBe(simpleMusicXml) // Should return original on error
-    })
-
-    it('should handle MusicXML with repeats when XSLT fails', async () => {
-      const result = await unrollMusicXml(musicXmlWithRepeats, 'nonexistent.xsl', xsltProcessor)
-      
-      expect(result).toBeDefined()
-      expect(result).toBe(musicXmlWithRepeats) // Should return original on error
-    })
-
-    it('should preserve measure structure when transformation fails', async () => {
-      const result = await unrollMusicXml(musicXmlWithRepeats, 'nonexistent.xsl', xsltProcessor)
-      
-      // Count measures in original and result
-      const originalMeasureCount = (musicXmlWithRepeats.match(/<measure/g) || []).length
-      const resultMeasureCount = (result.match(/<measure/g) || []).length
-      
-      expect(resultMeasureCount).toBe(originalMeasureCount) // Should be same when transformation fails
-    })
-
-    it('should handle empty input gracefully', async () => {
-      const result = await unrollMusicXml('', 'nonexistent.xsl', xsltProcessor)
-      expect(result).toBe('')
-    })
-
-    it('should handle malformed XML gracefully', async () => {
-      const invalidXml = '<invalid-xml>'
-      const result = await unrollMusicXml(invalidXml, 'nonexistent.xsl', xsltProcessor)
-      expect(result).toBe(invalidXml) // Should return original on error
-    })
-
-    it('should complete all async operations without unhandled rejections', async () => {
-      const promises = [
-        unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor),
-        unrollMusicXml(musicXmlWithRepeats, 'nonexistent.xsl', xsltProcessor),
-        unrollMusicXml('', 'nonexistent.xsl', xsltProcessor),
-        unrollMusicXml('<invalid-xml>', 'nonexistent.xsl', xsltProcessor),
-        unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor)
-      ]
-
-      const results = await Promise.allSettled(promises)
-
-      // All promises should settle (either fulfilled or rejected)
-      expect(results).toHaveLength(5)
-      results.forEach(result => {
-        expect(result.status).toMatch(/fulfilled|rejected/)
+    // ERROR HANDLING TESTS
+    describe('Error Handling', () => {
+      it('should handle missing XSLT file gracefully', async () => {
+        const result = await unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor)
+        expect(result).toBe(simpleMusicXml) // Should return original on error
       })
-      
-      // All should succeed (graceful error handling)
-      results.forEach(result => {
-        expect(result.status).toBe('fulfilled')
+
+      it('should handle XSLT transformation errors gracefully', async () => {
+        const result = await unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor)
+
+        expect(result).toBeDefined()
+        expect(result).toBe(simpleMusicXml) // Should return original on error
+      })
+
+      it('should handle MusicXML with repeats when XSLT fails', async () => {
+        const result = await unrollMusicXml(musicXmlWithRepeats, 'nonexistent.xsl', xsltProcessor)
+
+        expect(result).toBeDefined()
+        expect(result).toBe(musicXmlWithRepeats) // Should return original on error
+      })
+
+      it('should preserve measure structure when transformation fails', async () => {
+        const result = await unrollMusicXml(musicXmlWithRepeats, 'nonexistent.xsl', xsltProcessor)
+
+        // Count measures in original and result
+        const originalMeasureCount = (musicXmlWithRepeats.match(/<measure/g) || []).length
+        const resultMeasureCount = (result.match(/<measure/g) || []).length
+
+        expect(resultMeasureCount).toBe(originalMeasureCount) // Should be same when transformation fails
+      })
+
+      it('should handle empty input gracefully', async () => {
+        const result = await unrollMusicXml('', 'nonexistent.xsl', xsltProcessor)
+        expect(result).toBe('')
+      })
+
+      it('should handle malformed XML gracefully', async () => {
+        const invalidXml = '<invalid-xml>'
+        const result = await unrollMusicXml(invalidXml, 'nonexistent.xsl', xsltProcessor)
+        expect(result).toBe(invalidXml) // Should return original on error
+      })
+
+      it('should complete all async operations without unhandled rejections', async () => {
+        const promises = [
+          unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor),
+          unrollMusicXml(musicXmlWithRepeats, 'nonexistent.xsl', xsltProcessor),
+          unrollMusicXml('', 'nonexistent.xsl', xsltProcessor),
+          unrollMusicXml('<invalid-xml>', 'nonexistent.xsl', xsltProcessor),
+          unrollMusicXml(simpleMusicXml, 'nonexistent.xsl', xsltProcessor)
+        ]
+
+        const results = await Promise.allSettled(promises)
+
+        // All promises should settle (either fulfilled or rejected)
+        expect(results).toHaveLength(5)
+        results.forEach(result => {
+          expect(result.status).toMatch(/fulfilled|rejected/)
+        })
+
+        // All should succeed (graceful error handling)
+        results.forEach(result => {
+          expect(result.status).toBe('fulfilled')
+        })
       })
     })
   })

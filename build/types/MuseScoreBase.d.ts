@@ -66,6 +66,6 @@ export declare class MuseScoreBase {
     protected _timemap?: MeasureTimemap;
     protected _mpos?: object;
     constructor(_downloader: string | MuseScoreDownloader | ReturnType<MuseScoreDownloader>, _xsltProcessor: IXSLTProcessor);
-    extract(musicXml: string): Promise<void>;
+    protected _extract(musicXml: string): Promise<void>;
 }
 //# sourceMappingURL=MuseScoreBase.d.ts.map

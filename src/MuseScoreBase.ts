@@ -75,7 +75,7 @@ export class MuseScoreBase {
     protected _xsltProcessor: IXSLTProcessor,
   ) { }
 
-  async extract(musicXml: string): Promise<void> {
+  protected async _extract(musicXml: string): Promise<void> {
     // Retrieve MuseScore metadata.
     // ...given a URL: Download the score media.
     if (typeof this._downloader === 'string') {

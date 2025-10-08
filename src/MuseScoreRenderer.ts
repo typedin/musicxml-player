@@ -1,6 +1,7 @@
 import type { ISheetRenderer } from './ISheetRenderer';
 import { MuseScoreDownloader, MuseScoreBase } from './MuseScoreBase';
 import type { MeasureIndex, MillisecsTimestamp, Player } from './Player';
+import { Cursor } from './Cursor';
 import { assertIsDefined, binarySearch } from './helpers';
 import type { IXSLTProcessor } from './interfaces/IXSLTProcessor';
 import pkg from '../package.json';
@@ -26,7 +27,8 @@ type MuseScorePosition = {
  */
 export class MuseScoreRenderer extends MuseScoreBase implements ISheetRenderer {
   player?: Player;
-  protected _cursor: HTMLDivElement;
+  protected _cursor: Cursor;
+  protected _container?: HTMLElement;
   protected _measures?: MuseScorePosition[];
   protected _segments?: (MuseScorePosition & {
     timestamp: MillisecsTimestamp;
@@ -39,17 +41,18 @@ export class MuseScoreRenderer extends MuseScoreBase implements ISheetRenderer {
     xsltProcessor: IXSLTProcessor,
   ) {
     super(downloader, xsltProcessor);
-    this._cursor = document.createElement('div');
-    this._cursor.className = 'player-cursor';
+    this._cursor = new Cursor();
   }
 
   destroy(): void {
-    this._cursor.remove();
+    this._cursor.destroy();
   }
 
   async initialize(container: HTMLElement, musicXml: string): Promise<void> {
+    this._container = container;
+
     // Extract the metadata in the base class.
-    await this.extract(musicXml);
+    await this._extract(musicXml);
     assertIsDefined(this._mscore);
 
     // Store information we'll need later:
@@ -143,7 +146,7 @@ export class MuseScoreRenderer extends MuseScoreBase implements ISheetRenderer {
     });
 
     // Initialize the cursor.
-    container.appendChild(this._cursor);
+    this._cursor.initialize(container);
     this.moveTo(0, 0, 0);
   }
 
@@ -178,11 +181,13 @@ export class MuseScoreRenderer extends MuseScoreBase implements ISheetRenderer {
     const sindex = segment >= 0 ? segment : Math.max(0, -segment - 2);
 
     // Move the cursor to this position.
-    const x = this._segments[sindex].x;
-    const y = this._segments[sindex].y;
-    const height = this._measures[index].sy;
-    this._cursor.style.transform = `translate(${x}px,${y}px)`;
-    this._cursor.style.height = `${height}px`;
+    assertIsDefined(this._container);
+    const rectContainer = this._container.getBoundingClientRect();
+    this._cursor.moveTo(
+      this._segments[sindex].x,
+      this._segments[sindex].y - (this._measures[index].sy / 2) + rectContainer.top,
+      this._measures[index].sy * 2
+    );
   }
 
   onResize(): void { }
