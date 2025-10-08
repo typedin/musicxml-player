@@ -1,5 +1,5 @@
 import type { IXSLTProcessor } from '../interfaces/IXSLTProcessor';
-import { MeasureTimemap } from '../IMIDIConverter';
+import { MeasureTimemap } from '../interfaces/IMIDIConverter';
 
 /**
  * Parse a MusicXML score into a timemap.

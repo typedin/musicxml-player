@@ -33,7 +33,6 @@
   },
   "scripts": {
     "test": "web-test-runner src/**/*.spec.js --node-resolve",
-    "test:integration": "vitest src/__tests__/**/*.spec.js",
     "test:unit": "vitest src/**/*.test.ts",
     "test:ts": "vitest",
     "test:ts:ui": "vitest --ui",

@@ -75,6 +75,7 @@ export class VerovioRenderer extends VerovioRendererBase implements ISheetRender
     );
   }
 
+  // WARNING unused parameter type
   onEvent(type: string): void {
     this._refresh();
     this._move(
