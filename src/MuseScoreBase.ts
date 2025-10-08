@@ -1,6 +1,6 @@
-import type { MeasureTimemap } from './IMIDIConverter';
-import { atoab, fetish } from './helpers';
 import type { IXSLTProcessor } from './interfaces/IXSLTProcessor';
+import type { MeasureTimemap } from './interfaces/IMIDIConverter';
+import { atoab, fetish } from './helpers';
 
 export type MuseScoreDownloader = (musicXml: string) => {
   pngs?: string[];

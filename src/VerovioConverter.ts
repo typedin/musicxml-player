@@ -1,12 +1,12 @@
 import createVerovioModule from 'verovio/wasm';
-import { VerovioToolkit } from 'verovio/esm';
-import type { IMIDIConverter, MeasureTimemap } from './IMIDIConverter';
-import type { VerovioOptionsFixed, VerovioToolkitFixed } from './VerovioTypes';
-import { VerovioConverterBase } from './VerovioConverterBase';
-import { assertIsDefined, atoab, unrollMusicXml, parseMusicXmlTimemap } from './helpers';
-import type { PlayerOptions } from './Player';
+import type { IMIDIConverter, MeasureTimemap } from './interfaces/IMIDIConverter';
 import type { IXSLTProcessor } from './interfaces/IXSLTProcessor';
+import type { PlayerOptions } from './Player';
+import type { VerovioOptionsFixed, VerovioToolkitFixed } from './VerovioTypes';
 import { SaxonJSAdapter } from './adapters/SaxonJSAdapter';
+import { VerovioConverterBase } from './VerovioConverterBase';
+import { VerovioToolkit } from 'verovio/esm';
+import { assertIsDefined, atoab, unrollMusicXml, parseMusicXmlTimemap } from './helpers';
 
 /**
  * Implementation of IMIDIConverter that uses Verovio to convert a MusicXML file to MIDI and timemap.

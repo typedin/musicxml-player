@@ -1,8 +1,8 @@
-import type { IMIDIConverter, MeasureTimemap } from './IMIDIConverter';
-import { assertIsDefined, fetish, parseMusicXmlTimemap } from './helpers';
-import { PlayerOptions } from './Player';
+import type { IMIDIConverter, MeasureTimemap } from './interfaces/IMIDIConverter';
 import type { IXSLTProcessor } from './interfaces/IXSLTProcessor';
+import { PlayerOptions } from './Player';
 import { SaxonJSAdapter } from './adapters/SaxonJSAdapter';
+import { assertIsDefined, fetish, parseMusicXmlTimemap } from './helpers';
 
 /**
  * Implementation of IMIDIConverter that queries the musicxml-midi API (@see https://github.com/infojunkie/musicxml-midi)

@@ -1,9 +1,10 @@
-import { ISheetRenderer } from './ISheetRenderer';
+import pkg from '../package.json';
+import { ISheetRenderer } from './interfaces/ISheetRenderer';
+// WARNING unused import PlayerState
+import { PlayerState, type MeasureIndex, type MillisecsTimestamp, type PlayerOptions } from './Player';
 import { TimeMapEntryFixed } from './VerovioTypes';
 import { VerovioRendererBase } from './VerovioRendererBase';
-import { PlayerState, type MeasureIndex, type MillisecsTimestamp, type PlayerOptions } from './Player';
 import { fetish } from './helpers';
-import pkg from '../package.json';
 
 /**
  * Implementation of ISheetRenderer that uses statically-rendered Verovio assets:

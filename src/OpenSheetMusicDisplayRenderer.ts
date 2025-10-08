@@ -1,6 +1,6 @@
-import { assertIsDefined } from './helpers';
-import type { ISheetRenderer } from './ISheetRenderer';
+import type { ISheetRenderer } from './interfaces/ISheetRenderer';
 import type { MeasureIndex, MillisecsTimestamp, Player, PlayerOptions } from './Player';
+import { assertIsDefined } from './helpers';
 import {
   Fraction,
   IOSMDOptions,
@@ -119,7 +119,7 @@ export class OpenSheetMusicDisplayRenderer implements ISheetRenderer {
     }
   }
 
-  onEvent(): void {}
+  onEvent(): void { }
 
   get version(): string {
     assertIsDefined(this._osmd);

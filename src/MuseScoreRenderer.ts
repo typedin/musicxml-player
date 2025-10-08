@@ -1,4 +1,4 @@
-import type { ISheetRenderer } from './ISheetRenderer';
+import type { ISheetRenderer } from './interfaces/ISheetRenderer';
 import { MuseScoreDownloader, MuseScoreBase } from './MuseScoreBase';
 import type { MeasureIndex, MillisecsTimestamp, Player } from './Player';
 import { Cursor } from './Cursor';

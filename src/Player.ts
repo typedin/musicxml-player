@@ -1,4 +1,10 @@
+import pkg from '../package.json';
+import pkg_lock from '../package-lock.json';
+import type { IMIDIConverter } from './interfaces/IMIDIConverter';
+import type { ISheetRenderer } from './interfaces/ISheetRenderer';
+import type { IXSLTProcessor } from './interfaces/IXSLTProcessor';
 import { BasicMIDI } from 'spessasynth_core';
+import { SaxonJSAdapter } from './adapters/SaxonJSAdapter';
 import { WorkletSynthesizer as Synthetizer, Sequencer } from 'spessasynth_lib';
 import { midiMessageTypes } from 'spessasynth_core';
 import {
@@ -9,12 +15,6 @@ import {
   fetish,
   debounce
 } from './helpers';
-import type { IMIDIConverter } from './IMIDIConverter';
-import type { ISheetRenderer } from './ISheetRenderer';
-import type { IXSLTProcessor } from './interfaces/IXSLTProcessor';
-import { SaxonJSAdapter } from './adapters/SaxonJSAdapter';
-import pkg from '../package.json';
-import pkg_lock from '../package-lock.json';
 
 const DEBOUNCE_THROTTLE = 100;
 

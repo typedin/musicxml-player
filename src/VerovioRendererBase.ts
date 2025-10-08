@@ -1,7 +1,7 @@
-import { MeasureTimemapEntry } from './IMIDIConverter';
 import type { MeasureIndex, MillisecsTimestamp, Player, PlayerOptions } from './Player';
-import { Cursor } from './Cursor';
 import type { TimeMapEntryFixed } from './VerovioTypes';
+import { Cursor } from './Cursor';
+import { MeasureTimemapEntry } from './interfaces/IMIDIConverter';
 import { assertIsDefined } from './helpers';
 
 export class VerovioRendererBase {
@@ -50,7 +50,7 @@ export class VerovioRendererBase {
     // Initialize the Verovio state.
     this._container = container;
     this._options = options;
-    this._events = timemap.map((e: TimeMapEntryFixed) => { return {...e, measureEntry: 0, rectNotes: [], notesOn: []}; });
+    this._events = timemap.map((e: TimeMapEntryFixed) => { return { ...e, measureEntry: 0, rectNotes: [], notesOn: [] }; });
     this._measures = [];
     this._currentNotes = [];
 
@@ -96,8 +96,8 @@ export class VerovioRendererBase {
 
       // Carry over the previously sounding notes and remove the ending notes.
       assertIsDefined(this._events);
-      event.measureEntry = this._measures.length-1;
-      event.notesOn = eventEntry > 0 ? structuredClone(this._events[eventEntry-1].notesOn) : [];
+      event.measureEntry = this._measures.length - 1;
+      event.notesOn = eventEntry > 0 ? structuredClone(this._events[eventEntry - 1].notesOn) : [];
       const notesOff = [...(event.off ?? []), ...(event.restsOff ?? [])];
       event.notesOn = event.notesOn.filter(n => !notesOff.includes(n));
 

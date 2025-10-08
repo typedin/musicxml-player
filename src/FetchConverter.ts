@@ -1,9 +1,9 @@
-import type { IMIDIConverter, MeasureTimemap } from './IMIDIConverter';
-import { assertIsDefined, fetish, parseMusicXmlTimemap } from './helpers';
 import pkg from '../package.json';
-import { PlayerOptions } from './Player';
+import type { IMIDIConverter, MeasureTimemap } from './interfaces/IMIDIConverter';
 import type { IXSLTProcessor } from './interfaces/IXSLTProcessor';
+import { PlayerOptions } from './Player';
 import { SaxonJSAdapter } from './adapters/SaxonJSAdapter';
+import { assertIsDefined, fetish, parseMusicXmlTimemap } from './helpers';
 
 /**
  * Implementation of IMIDIConverter that simply fetches given MIDI file and timemap JSON file URIs.
