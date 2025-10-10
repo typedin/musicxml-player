@@ -1,8 +1,5 @@
-import chai, { expect } from '@esm-bundle/chai';
-import chaiAsPromised from '@esm-bundle/chai-as-promised';
-import { parseMusicXml } from '../../build/musicxml-player';
-
-chai.use(chaiAsPromised);
+/* @vitest-environment jsdom */
+import { parseMusicXml } from './parse-musicxml';
 
 describe('parseMusicXml', () => {
   it('correctly parses uncompressed MusicXML', async () => {
@@ -48,7 +45,7 @@ describe('parseMusicXml', () => {
     </score-partwise>
     `.trim(),
       ),
-    ).to.not.be.rejectedWith();
+    ).resolves.toBeDefined();
   });
 
   it('correctly throws on invalid MusicXML', async () => {
@@ -58,7 +55,7 @@ describe('parseMusicXml', () => {
 THIS IS NOT MUSICXML
     `.trim(),
       ),
-    ).to.be.rejectedWith();
+    ).rejects.toBeDefined();
   });
 
   it('correctly throws on valid HTML', async () => {
@@ -87,6 +84,8 @@ THIS IS NOT MUSICXML
         </html>
       `.trim(),
       ),
-    ).to.be.rejectedWith();
+    ).rejects.toBeDefined();
   });
 });
+
+
